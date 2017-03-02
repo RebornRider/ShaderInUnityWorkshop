@@ -1,4 +1,0 @@
-sceneSetups:
-- path: Assets/VertexAndFragmentBasics/VertexAndFragmentsBasic.unity
-  isLoaded: 1
-  isActive: 1
