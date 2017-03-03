@@ -1,4 +1,4 @@
-﻿Shader "Unlit/Properties"
+﻿Shader "Unlit/Properties_Reference"
 {
 	Properties
 	{
@@ -17,7 +17,11 @@
 	}
 	SubShader
 	{
-		Tags { "RenderType"="Opaque" }
+		Tags 
+		{ 
+			"Queue" = "Geometry"
+			"RenderType"="Opaque" 
+		}
 		LOD 100
 
 		Pass
@@ -45,6 +49,16 @@
 
 			sampler2D _MainTex;
 			float4 _MainTex_ST;
+
+			sampler2D _MyTexture;
+			sampler2D _MyNormalMap;
+
+			int _MyInt;
+			float _MyFloat;
+			float _MyRange;
+
+			half4 _MyColor;
+			float4 _MyVector;
 			
 			v2f vert (appdata v)
 			{
@@ -64,6 +78,8 @@
 				return col;
 			}
 			ENDCG
-		}
+		}				
 	}
+
+	FallBack "Hidden/InternalErrorShader"
 }

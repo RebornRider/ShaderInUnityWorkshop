@@ -19,7 +19,7 @@
 			
 			#include "UnityCG.cginc"
 
-			struct appdata
+			struct vertexShaderInput
 			{
 				float4 modelSpacePosition : POSITION;
 				float2 uvChannel0Coordinate : TEXCOORD0;
@@ -35,7 +35,7 @@
 			sampler2D _MainTex;
 			float4 _MainTex_ST;
 			
-			vertexShaderOutputToFragmentShaderInput vertexShaderFunction (appdata inputVertex)
+			vertexShaderOutputToFragmentShaderInput vertexShaderFunction (vertexShaderInput inputVertex)
 			{
 				vertexShaderOutputToFragmentShaderInput output;
 
@@ -50,12 +50,12 @@
 				return output;
 			}
 			
-			fixed4 fragmentShaderFunction (vertexShaderOutputToFragmentShaderInput input) : SV_Target
+			fixed4 fragmentShaderFunction (vertexShaderOutputToFragmentShaderInput inputFragment) : SV_TARGET
 			{
 				// sample the texture
-				fixed4 outputColor = tex2D(_MainTex, input.uvChannel0Coordinate);
+				fixed4 outputColor = tex2D(_MainTex, inputFragment.uvChannel0Coordinate);
 				// apply fog
-				UNITY_APPLY_FOG(input.fogCoord, outputColor);
+				UNITY_APPLY_FOG(inputFragment.fogCoord, outputColor);
 				return outputColor;
 			}
 			ENDCG
