@@ -1,7 +1,8 @@
-﻿Shader "Shaders 102/UV Color Multiply"
+﻿Shader "Hidden/UVColor_Blend_MSAA_Fix"
 {
 	Properties
 	{
+		[HideInInspector]
 		_MainTex ("Texture", 2D) = "white" {}
 	}
 	SubShader
@@ -14,7 +15,7 @@
 			CGPROGRAM
 			#pragma vertex vert
 			#pragma fragment frag
-
+			
 			#include "UnityCG.cginc"
 
 			struct appdata
@@ -25,29 +26,29 @@
 
 			struct v2f
 			{
-				float2 uv : TEXCOORD0;
-				float4 vertex : SV_POSITION;
+				float4 vertex : SV_POSITION;	
+				float2 uv : TEXCOORD0;		
+				float2 uv1 : TEXCOORD1;		
 			};
-
+			
 			float4 _MainTex_TexelSize;
-
 			v2f vert (appdata v)
 			{
 				v2f o;
-				o.vertex = mul(UNITY_MATRIX_MVP, v.vertex);
+				o.vertex = UnityObjectToClipPos(v.vertex);
 				o.uv = v.uv;
+				o.uv1 = o.uv;
+				#if UNITY_UV_STARTS_AT_TOP
+				if (_MainTex_TexelSize.y < 0)
+					o.uv1.y = 1 - v.uv.y;
+				#endif
 				return o;
 			}
-
+			
 			sampler2D _MainTex;
-
-			float4 frag (v2f i) : SV_Target
+			fixed4 frag (v2f i) : SV_Target
 			{
-
-				float4 col = tex2D(_MainTex, i.uv);
-				col *= float4(i.uv.x, i.uv.y, 0, 1);
-
-				return col;
+				return tex2D(_MainTex, i.uv) * float4(i.uv1, 0, 1);
 			}
 			ENDCG
 		}

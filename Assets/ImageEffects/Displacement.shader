@@ -2,6 +2,7 @@
 {
 	Properties
 	{
+		[HideInInspector]
 		_MainTex("Texture", 2D) = "white" {}
 		_DisplaceTex("Displacement Texture", 2D) = "white" {}
 		_Magnitude("Magnitude", Range(0,0.1)) = 1
