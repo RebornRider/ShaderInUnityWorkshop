@@ -45,7 +45,7 @@
 
 			float4 frag (v2f i) : SV_Target
 			{
-				float2 distuv = float2(i.uv.x + _Time.x * 2, i.uv.y + _Time.x * 2);
+				float2 distuv = float2(i.uv.x, i.uv.y) + _Time.x * 2;
 
 				float2 disp = tex2D(_DisplaceTex, distuv).xy;
 				disp = ((disp * 2) - 1) * _Magnitude;
