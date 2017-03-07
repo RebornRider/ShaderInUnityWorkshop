@@ -1,12 +1,11 @@
-﻿Shader "Custom/PBR_Reference" {
+﻿Shader "Custom/PBR_AllMaps_Reference" {
 	Properties {
 		_Color ("Color", Color) = (1,1,1,1)
 		_MainTex ("Albedo (RGB)", 2D) = "white" {}
 		_NormalMap ("Normal Map", 2D) = "bump" {}
 		_GlossinessMap ("Smoothness Map", 2D) = "black" {}
 		_MetallicMap ("Metallic Map", 2D) = "black" {}
-		_EmissionMap ("Emission Map", 2D) = "black" {}
-		
+		_EmissionMap ("Emission Map", 2D) = "black" {}	
 		_OcclusionMap ("Occlusion Map", 2D) = "white" {}
 	}
 	SubShader {
@@ -38,14 +37,12 @@
 
 		fixed4 _Color;	
 
-		void surf (Input IN, inout SurfaceOutputStandard o) {
-			// Albedo comes from a texture tinted by color
+		void surf (Input IN, inout SurfaceOutputStandard o) 
+		{
 			fixed4 c = tex2D (_MainTex, IN.uv_MainTex) * _Color;
 			o.Albedo = c.rgb;
 			o.Alpha = c.a;
-
 			o.Normal = UnpackNormal (tex2D (_NormalMap, IN.uv_NormalMap));
-			// Metallic and smoothness come from slider variables
 			o.Metallic = tex2D (_MetallicMap, IN.uv_MetallicMap).r;
 			o.Smoothness = tex2D (_GlossinessMap, IN.uv_GlossinessMap).r;			
 			o.Emission = tex2D (_EmissionMap, IN.uv_EmissionMap);
