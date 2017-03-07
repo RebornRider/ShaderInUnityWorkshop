@@ -1,9 +1,11 @@
 ﻿Shader "Custom/Lambert_Texture_Normal_Reference" {
-	Properties {
+	Properties 
+	{
 	  _MainTex ("Texture", 2D) = "white" {}
 	  _NormalMap ("Normalmap", 2D) = "bump" {}
 	}
-	SubShader {
+	SubShader 
+	{
 	  Tags { "RenderType" = "Opaque" }
 
 	  CGPROGRAM
@@ -23,5 +25,6 @@
 	  }
 	  ENDCG
 	} 
+
 	Fallback "Diffuse"
 }

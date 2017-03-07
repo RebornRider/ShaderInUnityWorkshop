@@ -1,7 +1,7 @@
 ﻿Shader "Custom/Lambert_Texture_Reference" {
 	Properties 
 	{
-		  _MainTex ("Texture", 2D) = "white" {}
+		_MainTex ("Texture", 2D) = "white" {}
 	}
 
 	SubShader 
