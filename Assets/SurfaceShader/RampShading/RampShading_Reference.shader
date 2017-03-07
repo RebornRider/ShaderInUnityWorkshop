@@ -5,7 +5,6 @@ Shader "Custom/Ramp Shading Reference" {
 		_MainTex ("Texture", 2D) = "white" {}
 		_Ramp ("Ramp", 2D) = "white" {}
 		_AttenMod ("Attennuation", Range(1.0, 2.0)) = 1.0
-
 	}
 	SubShader {
 
@@ -13,8 +12,6 @@ Shader "Custom/Ramp Shading Reference" {
 
 		CGPROGRAM
 		#pragma surface surf Ramp
-
-		
 
 		sampler2D _MainTex;
 		fixed4 _Color;
