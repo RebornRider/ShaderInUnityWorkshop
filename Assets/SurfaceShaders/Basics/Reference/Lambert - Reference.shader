@@ -10,7 +10,8 @@
 			float4 color : COLOR;
 		};
 
-		void surf (Input IN, inout SurfaceOutput o) {
+		void surf (Input IN, inout SurfaceOutput o) 
+		{
 			o.Albedo = 1;
 		}
 		ENDCG

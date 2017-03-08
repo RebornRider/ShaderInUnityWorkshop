@@ -1,4 +1,4 @@
-Shader "ShadersInUnityWorkshop/Reference/SurfaceShaders/RampShading/RampShading - Reference" {
+Shader "ShadersInUnityWorkshop/Reference/SurfaceShaders/RampShading/RampLighting - Reference" {
 	Properties {
 		_Color("Color", Color) = (1, 1, 1, 1)
 		[NoScaleOffset]
@@ -6,20 +6,21 @@ Shader "ShadersInUnityWorkshop/Reference/SurfaceShaders/RampShading/RampShading 
 		_Ramp ("Ramp", 2D) = "white" {}
 		_AttenMod ("Attennuation", Range(1.0, 2.0)) = 1.0
 	}
-	SubShader {
-
+	SubShader
+	{
 		Tags { "RenderType" = "Opaque" }
 
 		CGPROGRAM
 		#pragma surface surf Ramp
 
 		sampler2D _MainTex;
-		fixed4 _Color;
-
+		
 		struct Input 
 		{
 			float2 uv_MainTex;
 		};
+
+		fixed4 _Color;
 
 		void surf (Input IN, inout SurfaceOutput o) 
 		{

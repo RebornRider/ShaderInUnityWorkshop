@@ -1,4 +1,4 @@
-﻿Shader "ShadersInUnityWorkshop/UV Color Multiply"
+﻿Shader "ShadersInUnityWorkshop/Reference/VertexAndFragmentShaders/Basics/UV Color With DiffuseTex - Reference"
 {
 	Properties
 	{
@@ -6,6 +6,12 @@
 	}
 	SubShader
 	{
+		Tags 
+		{ 
+		"RenderType"="Opaque" 
+		"PreviewType" = "Plane"
+		}
+
 		// No culling or depth
 		Cull Off ZWrite Off ZTest Always
 
@@ -28,8 +34,6 @@
 				float2 uv : TEXCOORD0;
 				float4 vertex : SV_POSITION;
 			};
-
-			float4 _MainTex_TexelSize;
 
 			v2f vert (appdata v)
 			{

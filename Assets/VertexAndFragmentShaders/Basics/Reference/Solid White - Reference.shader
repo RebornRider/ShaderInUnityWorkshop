@@ -1,4 +1,4 @@
-﻿Shader "ShadersInUnityWorkshop/Reference/VertexAndFragmentShaders/Basics/Solid White Reference"
+﻿Shader "ShadersInUnityWorkshop/Reference/VertexAndFragmentShaders/Basics/Solid White - Reference"
 {
 	Properties {}
 	SubShader

@@ -4,12 +4,10 @@
 	{
 		_MainTex ("Texture", 2D) = "white" {}
 		_MinAttenuation("Min Ambient Attenuation", Range(0,1)) = 0
-
 	}
 	SubShader
 	{
 		Tags { "RenderType"="Opaque" }
-		LOD 100
 
 		Pass
 		{
@@ -21,8 +19,11 @@
 			CGPROGRAM
 			#pragma vertex vert
 			#pragma fragment frag
-			#include "UnityCG.cginc" // for UnityObjectToWorldNormal
-			#include "UnityLightingCommon.cginc" // for _LightColor0
+
+			// for UnityObjectToWorldNormal and UnityWorldSpaceLightDir
+			#include "UnityCG.cginc" 
+			// for _LightColor0
+			#include "UnityLightingCommon.cginc"
 			
 			struct vertexInput {
 				float4 vertex : POSITION;
@@ -44,8 +45,8 @@
 				o.uv = v.uv;
 				// get vertex normal in world space
 				half3 worldNormal = UnityObjectToWorldNormal(v.normal);
-				// dot product between normal and light direction for standard diffuse (Lambert) lighting
-				half nl = max(_MinAttenuation, dot(worldNormal, _WorldSpaceLightPos0.xyz));
+				// dot product between normal and light direction for lambert lighting
+				half nl = max(_MinAttenuation, dot(worldNormal,  UnityWorldSpaceLightDir(v.vertex)));
 				// factor in the light color
 				o.col = nl * _LightColor0;
 				return o;

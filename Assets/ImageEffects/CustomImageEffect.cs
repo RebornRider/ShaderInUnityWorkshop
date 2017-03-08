@@ -11,4 +11,3 @@ public class CustomImageEffect : MonoBehaviour
             Graphics.Blit(src, dst, EffectMaterial);
     }
 }
-

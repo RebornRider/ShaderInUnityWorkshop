@@ -11,7 +11,6 @@
 		{
 			"PreviewType" = "Plane"
 		}
-
 		// No culling or depth
 		Cull Off ZWrite Off ZTest Always
 
@@ -40,16 +39,13 @@
 			v2f vert (appdata v)
 			{
 				v2f o;
-
 				o.vertex = UnityObjectToClipPos(v.vertex);
 				o.uv = v.uv;
-
 				o.uv1 = o.uv;
 				#if UNITY_UV_STARTS_AT_TOP
 				if (_MainTex_TexelSize.y < 0)
 					o.uv1.y = 1 - v.uv.y;
 				#endif
-
 				return o;
 			}
 			

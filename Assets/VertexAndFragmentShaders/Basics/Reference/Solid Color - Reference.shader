@@ -1,4 +1,4 @@
-﻿Shader "ShadersInUnityWorkshop/Reference/VertexAndFragmentShaders/Basics/Solid Color Reference"
+﻿Shader "ShadersInUnityWorkshop/Reference/VertexAndFragmentShaders/Basics/Solid Color - Reference"
 {
 	Properties
 	{

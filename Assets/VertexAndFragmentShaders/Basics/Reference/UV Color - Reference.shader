@@ -1,4 +1,4 @@
-﻿Shader "ShadersInUnityWorkshop/UVColor Reference"
+﻿Shader "ShadersInUnityWorkshop/Reference/VertexAndFragmentShaders/Basics/UVColor - Reference"
 {
 	Properties
 	{
