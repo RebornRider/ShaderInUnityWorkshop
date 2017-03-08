@@ -13,10 +13,9 @@
 
 		Pass
 		{
-			// indicate that our pass is the "base" pass in forward
-			// rendering pipeline. It gets ambient and main directional
-			// light data set up; light direction in _WorldSpaceLightPos0
-			// and color in _LightColor0
+			// indicate that our pass is the "base" pass in forward rendering pipeline. 
+			// It gets ambient and main directional light data set up; 
+			// light direction in _WorldSpaceLightPos0 and color in _LightColor0
 			Tags {"LightMode"="ForwardBase"}
 		
 			CGPROGRAM
@@ -41,13 +40,11 @@
 			vertexOutput vert (vertexInput v)
 			{
 				vertexOutput o;
-
 				o.pos = UnityObjectToClipPos( v.vertex );
 				o.uv = v.uv;
 				// get vertex normal in world space
 				half3 worldNormal = UnityObjectToWorldNormal(v.normal);
-				// dot product between normal and light direction for
-				// standard diffuse (Lambert) lighting
+				// dot product between normal and light direction for standard diffuse (Lambert) lighting
 				half nl = max(_MinAttenuation, dot(worldNormal, _WorldSpaceLightPos0.xyz));
 				// factor in the light color
 				o.col = nl * _LightColor0;

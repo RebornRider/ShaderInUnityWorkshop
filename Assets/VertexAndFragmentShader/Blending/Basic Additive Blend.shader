@@ -4,7 +4,6 @@
 	{
 		_MainTex("Texture", 2D) = "white" {}
 	}
-
 	SubShader
 	{
 		Tags
@@ -47,7 +46,7 @@
 			float4 frag(v2f i) : SV_Target
 			{
 				float4 color = tex2D(_MainTex, i.uv);
-				return color;
+				return color * color.a;
 			}
 			ENDCG
 		}
