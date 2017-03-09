@@ -2,6 +2,7 @@
 {
 	Properties
 	{
+		[HideInInspector]
 		_MainTex ("Texture", 2D) = "white" {}
 	}
 	SubShader
@@ -42,10 +43,11 @@
 
 			float4 box(sampler2D tex, float2 uv, float4 size)
 			{
-				float4 c = tex2D(tex, uv + float2(-size.x, size.y)) + tex2D(tex, uv + float2(0, size.y)) + tex2D(tex, uv + float2(size.x, size.y)) +
-							tex2D(tex, uv + float2(-size.x, 0)) + tex2D(tex, uv + float2(0, 0)) + tex2D(tex, uv + float2(size.x, 0)) +
-							tex2D(tex, uv + float2(-size.x, -size.y)) + tex2D(tex, uv + float2(0, -size.y)) + tex2D(tex, uv + float2(size.x, -size.y));
-
+				float4 c =	tex2D(tex, uv + float2(-size.x, size.y)) + tex2D(tex, uv + float2(0, size.y)) + 
+							tex2D(tex, uv + float2(size.x, size.y)) + tex2D(tex, uv + float2(-size.x, 0)) + 
+							tex2D(tex, uv + float2(0, 0)) + tex2D(tex, uv + float2(size.x, 0)) + 
+							tex2D(tex, uv + float2(-size.x, -size.y)) + tex2D(tex, uv + float2(0, -size.y)) + 
+							tex2D(tex, uv + float2(size.x, -size.y));
 				return c / 9;
 			}
 
