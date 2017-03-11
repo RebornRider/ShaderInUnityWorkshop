@@ -47,7 +47,7 @@
 				//output.projectionSpacePosition = inputVertex.modelSpacePosition;
 				
 				output.uvChannel0Coordinate = TRANSFORM_TEX(inputVertex.uvChannel0Coordinate, _MainTex);
-				//output.uvChannel0Coordinate = inputVertex.uvChannel0Coordinate * _MainTex_ST;
+				//output.uvChannel0Coordinate = inputVertex.uvChannel0Coordinate * _MainTex_ST + _MainTex_ST.zw;
 
 				UNITY_TRANSFER_FOG(output,output.projectionSpacePosition);
 				return output;

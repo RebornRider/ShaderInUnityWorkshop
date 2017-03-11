@@ -3,6 +3,8 @@
 	Properties
 	{
 		_MainTex("Texture", 2D) = "white" {}
+		[Toggle]
+		_Good("Is Good?", Int) = 1
 	}
 
 	SubShader
@@ -43,12 +45,14 @@
 			}
 
 			sampler2D _MainTex;
+			int _Good;
 
 			float4 frag(v2f i) : SV_Target
 			{
 				float4 color = tex2D(_MainTex, i.uv);
 				float luminance = float(0.3 * color.r + 0.59 * color.g + 0.11 * color.b); 
-				color = float4(luminance, luminance, luminance, color.a);
+				float average = (color.r + color.g + color.b) / 3;
+				color = lerp(float4(average, average, average, color.a), float4(luminance, luminance, luminance, color.a), _Good);
 				return color;
 			}
 			ENDCG

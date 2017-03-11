@@ -2,6 +2,7 @@
 	Properties 
 	{
 	  _MainTex ("Texture", 2D) = "white" {}
+	  [Normal]
 	  _NormalMap ("Normalmap", 2D) = "bump" {}
 	}
 	SubShader 

@@ -33,7 +33,7 @@
 			struct vertexOutput {
 				float4 pos : SV_POSITION;
 				float2 uv : TEXCOORD0;	
-				float4 col : COLOR;
+				float4 lightCol : COLOR;
 			};
 
 			float _MinAttenuation;
@@ -48,7 +48,7 @@
 				// dot product between normal and light direction for lambert lighting
 				half nl = max(_MinAttenuation, dot(worldNormal,  UnityWorldSpaceLightDir(v.vertex)));
 				// factor in the light color
-				o.col = nl * _LightColor0;
+				o.lightCol = nl * _LightColor0;
 				return o;
 			}
 			
@@ -56,11 +56,7 @@
 
 			fixed4 frag (vertexOutput i) : SV_Target
 			{
-				// sample texture
-				fixed4 col = tex2D(_MainTex, i.uv);
-				// multiply by lighting
-				col *= i.col;
-				return col;
+				return tex2D(_MainTex, i.uv) * i.lightCol;
 			}
 			ENDCG
 		}

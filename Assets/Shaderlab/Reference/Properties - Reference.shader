@@ -3,7 +3,7 @@
 	Properties
 	{
 		_MainTex ("Texture", 2D) = "white" {}
-		[NoScaleOffset] 
+		[NoScaleOffset]
 		_MyTexture ("My texture", 2D) = "white" {}
 		[Normal] 
 		_MyNormalMap ("My normal map", 2D) = "bump" {}	// Grey
