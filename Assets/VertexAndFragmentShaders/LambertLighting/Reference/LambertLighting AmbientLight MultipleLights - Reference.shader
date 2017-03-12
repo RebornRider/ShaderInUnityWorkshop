@@ -1,4 +1,4 @@
-﻿Shader "ShadersInUnityWorkshop/Reference/VertexAndFragmentShaders/LambertLighting/LambertLighting MultipleLights - Reference"
+﻿Shader "ShadersInUnityWorkshop/Reference/VertexAndFragmentShaders/LambertLighting/LambertLighting AmbientLight MultipleLights - Reference"
 {
 	Properties
 	{
@@ -32,7 +32,7 @@
 			struct vertexOutput {
 				float4 pos : SV_POSITION;
 				float2 uv : TEXCOORD0;	
-				float4 lightCol : COLOR;
+				fixed3 lightCol : COLOR;
 			};
 
 			vertexOutput vert (vertexInput v)
@@ -43,8 +43,8 @@
 				// get vertex normal in world space
 				half3 worldNormal = UnityObjectToWorldNormal(v.normal);
 				// dot product between normal and light direction for lambert lighting
-				half NdotL = saturate(dot(worldNormal,  UnityWorldSpaceLightDir(v.vertex)));
-				// factor in the light color and amience
+				half NdotL = saturate(dot(worldNormal, UnityWorldSpaceLightDir(v.vertex)));
+				// factor in the light color and ambience
 				o.lightCol = saturate((NdotL * _LightColor0) + unity_AmbientSky);
 				return o;
 			}
@@ -52,9 +52,10 @@
 			sampler2D _MainTex;
 			float4 _MainTex_ST;
 
-			fixed4 frag (vertexOutput i) : SV_Target
+			fixed3 frag (vertexOutput i) : SV_Target
 			{
-				return tex2D(_MainTex, TRANSFORM_TEX(i.uv, _MainTex)) * i.lightCol;
+				fixed3 diffuseColor = tex2D(_MainTex, TRANSFORM_TEX(i.uv, _MainTex));
+				return diffuseColor * i.lightCol;
 			}
 			ENDCG
 		}
@@ -85,22 +86,24 @@
 			struct vertexOutput {
 				float4 pos : SV_POSITION;
 				float2 uv : TEXCOORD0;	
-				float3 lightCol : COLOR;
+				fixed3 lightCol : COLOR;
 			};
 
-		
 			vertexOutput vert(vertexInput v)
 			{
 				vertexOutput o;					
 				o.pos = UnityObjectToClipPos(v.vertex);
 				o.uv = v.uv;	
 				half3 vertexToLightSource = WorldSpaceLightDir(v.vertex);
-				fixed attenuation  = 1.0/ length(vertexToLightSource);
+				// linear falloff for point lights , no falloff for directional lights
+				float distance = length(vertexToLightSource);
+				fixed attenuation = lerp(1.0,1/(distance*distance),_WorldSpaceLightPos0.w);
+				//attenuation = 1/(distance*distance);
+				//attenuation = 1/distance;	
 				fixed NdotL = saturate(dot(UnityObjectToWorldNormal(v.normal), normalize(vertexToLightSource)));				
-				//here we multiply the attenuation as well to create falloff
-				fixed3 diffuseCol = _LightColor0.xyz * NdotL * attenuation;
-				//we can skip the saturate, since we do not add ambient in this pass
-				o.lightCol = diffuseCol;				
+				// we multiply with attenuation to create falloff
+				// we can skip the saturate, since we do not add ambient in this pass
+				o.lightCol = _LightColor0.xyz * NdotL * attenuation;;				
 				return o;
 			}
 
@@ -110,7 +113,7 @@
 			fixed3 frag(vertexOutput i) : SV_Target
 			{
 				fixed3 diffuseColor = tex2D(_MainTex, TRANSFORM_TEX(i.uv, _MainTex));
-				return i.lightCol * diffuseColor;
+				return diffuseColor * i.lightCol;
 			}
 			
 			ENDCG
