@@ -1,4 +1,4 @@
-﻿Shader "ShadersInUnityWorkshop/Reference/VertexAndFragmentShaders/LambertLighting/LambertLighting AmbientLight MultipleLights NormalMap - Reference"
+﻿Shader "ShadersInUnityWorkshop/Reference/VertexAndFragmentShaders/LambertLighting/LambertLighting AmbientLight MultipleLights NormalMap ShadowCasting - Reference"
 {
 	Properties
 	{
@@ -128,5 +128,34 @@
 			#pragma fragment fragAddPass			
 			ENDCG
 		}	
+		
+		// shadow caster rendering pass, implemented manually using macros from UnityCG.cginc
+		// eaquals to: UsePass "Legacy Shaders/VertexLit/SHADOWCASTER"
+		Pass
+		{
+			Tags {"LightMode"="ShadowCaster"}
+
+			CGPROGRAM
+			#pragma vertex vert
+			#pragma fragment frag
+			#pragma multi_compile_shadowcaster
+
+			struct v2f { 
+				V2F_SHADOW_CASTER;
+			};
+
+			v2f vert(appdata_base v)
+			{
+				v2f o;
+				TRANSFER_SHADOW_CASTER_NORMALOFFSET(o)
+				return o;
+			}
+
+			float4 frag(v2f i) : SV_Target
+			{
+				SHADOW_CASTER_FRAGMENT(i)
+			}
+			ENDCG
+		}
 	}
 }

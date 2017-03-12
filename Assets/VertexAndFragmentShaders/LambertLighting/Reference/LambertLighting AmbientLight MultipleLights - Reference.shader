@@ -45,7 +45,7 @@
 				// dot product between normal and light direction for lambert lighting
 				half NdotL = saturate(dot(worldNormal, UnityWorldSpaceLightDir(v.vertex)));
 				// factor in the light color and ambience
-				o.lightCol = saturate((NdotL * _LightColor0) + unity_AmbientSky);
+				o.lightCol = saturate((NdotL * _LightColor0) + ShadeSH9(half4(worldNormal,1)));
 				return o;
 			}
 			
