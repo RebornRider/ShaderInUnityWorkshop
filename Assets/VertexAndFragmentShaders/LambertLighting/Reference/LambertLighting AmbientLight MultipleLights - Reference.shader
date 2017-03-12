@@ -4,6 +4,25 @@
 	{
 		_MainTex ("Texture", 2D) = "white" {}
 	}
+
+	CGINCLUDE // common code for all passes of all subshaders
+		// for UnityObjectToWorldNormal and UnityWorldSpaceLightDir
+		#include "UnityCG.cginc" 
+		// for _LightColor0
+		#include "UnityLightingCommon.cginc"
+
+		struct vertexInput {
+			float4 vertex : POSITION;
+			float2 uv : TEXCOORD0;			
+			float3 normal : NORMAL;
+			float4 tangent : TANGENT;
+		};
+			
+		sampler2D _MainTex;
+		float4 _MainTex_ST;
+
+	ENDCG
+
 	SubShader
 	{
 		Tags { "RenderType"="Opaque" }
@@ -17,46 +36,36 @@
 		
 			CGPROGRAM
 			#pragma vertex vert
-			#pragma fragment frag
+			#pragma fragment fragBasePass	
 
-			// for UnityObjectToWorldNormal and UnityWorldSpaceLightDir
-			#include "UnityCG.cginc" 
-			// for _LightColor0
-			#include "UnityLightingCommon.cginc"
-			
-			struct vertexInput {
-				float4 vertex : POSITION;
-				float2 uv : TEXCOORD0;			
-				float3 normal : NORMAL;
-			};
-			struct vertexOutput {
+			struct vertexOutput {		
+				float4 modelPos : TEXCOORD0;
+				float2 uv : TEXCOORD1;
+				float3 normal : NORMAL;	
 				float4 pos : SV_POSITION;
-				float2 uv : TEXCOORD0;	
-				fixed3 lightCol : COLOR;
 			};
 
-			vertexOutput vert (vertexInput v)
+			vertexOutput vert(vertexInput v)
 			{
-				vertexOutput o;
-				o.pos = UnityObjectToClipPos( v.vertex );
-				o.uv = v.uv;
-				// get vertex normal in world space
-				half3 worldNormal = UnityObjectToWorldNormal(v.normal);
-				// dot product between normal and light direction for lambert lighting
-				half NdotL = saturate(dot(worldNormal, UnityWorldSpaceLightDir(v.vertex)));
-				// factor in the light color and ambience
-				o.lightCol = saturate((NdotL * _LightColor0) + ShadeSH9(half4(worldNormal,1)));
+				vertexOutput o;	
+				o.modelPos = v.vertex;			
+				o.pos = UnityObjectToClipPos(v.vertex);
+				o.uv = v.uv;	
+				o.normal = UnityObjectToWorldNormal(v.normal);
 				return o;
-			}
-			
-			sampler2D _MainTex;
-			float4 _MainTex_ST;
+			}	
 
-			fixed3 frag (vertexOutput i) : SV_Target
+			fixed3 fragBasePass (vertexOutput i) : SV_Target
 			{
+				float3 worldNormal = normalize(i.normal);
+				// dot product between normal and light direction for lambert lighting
+				half NdotL = saturate(dot(worldNormal, UnityWorldSpaceLightDir(i.modelPos)));
+				// factor in the light color and ambience
+				fixed3 lightCol = saturate((NdotL * _LightColor0)  + ShadeSH9(half4(worldNormal,1)));
+
 				fixed3 diffuseColor = tex2D(_MainTex, TRANSFORM_TEX(i.uv, _MainTex));
-				return diffuseColor * i.lightCol;
-			}
+				return diffuseColor * lightCol;
+			}			
 			ENDCG
 		}
 
@@ -71,51 +80,48 @@
 			
 			CGPROGRAM
 			#pragma vertex vert
-			#pragma fragment frag
-			
-			// for UnityObjectToWorldNormal and UnityWorldSpaceLightDir
-			#include "UnityCG.cginc" 
-			// for _LightColor0
-			#include "UnityLightingCommon.cginc"
-			
-			struct vertexInput {
-				float4 vertex : POSITION;
-				float2 uv : TEXCOORD0;			
-				float3 normal : NORMAL;
-			};
-			struct vertexOutput {
+			#pragma fragment fragAddPass
+
+			#include "AutoLight.cginc" 
+
+			#pragma multi_compile_fwdadd
+
+			struct vertexOutput {		
+				float3 worldPos : TEXCOORD0;
+				// these three vectors will hold a 3x3 rotation matrix
+				// that transforms from tangent to world space
+				float2 uv : TEXCOORD1;	
 				float4 pos : SV_POSITION;
-				float2 uv : TEXCOORD0;	
-				fixed3 lightCol : COLOR;
+				float3 normal : NORMAL;
+				LIGHTING_COORDS(2,3) 				
 			};
 
 			vertexOutput vert(vertexInput v)
 			{
-				vertexOutput o;					
+				vertexOutput o;	
+				o.worldPos = mul(unity_ObjectToWorld, v.vertex);
 				o.pos = UnityObjectToClipPos(v.vertex);
 				o.uv = v.uv;	
-				half3 vertexToLightSource = WorldSpaceLightDir(v.vertex);
-				// linear falloff for point lights , no falloff for directional lights
-				float distance = length(vertexToLightSource);
-				fixed attenuation = lerp(1.0,1/(distance*distance),_WorldSpaceLightPos0.w);
-				//attenuation = 1/(distance*distance);
-				//attenuation = 1/distance;	
-				fixed NdotL = saturate(dot(UnityObjectToWorldNormal(v.normal), normalize(vertexToLightSource)));				
-				// we multiply with attenuation to create falloff
-				// we can skip the saturate, since we do not add ambient in this pass
-				o.lightCol = _LightColor0.xyz * NdotL * attenuation;;				
+				o.normal = UnityObjectToWorldNormal(v.normal);
+				TRANSFER_VERTEX_TO_FRAGMENT(o); 
 				return o;
 			}
-
-			sampler2D _MainTex;
-			float4 _MainTex_ST;
-
-			fixed3 frag(vertexOutput i) : SV_Target
+		
+			fixed3 fragAddPass (vertexOutput i) : SV_Target
 			{
+				half3 vertexToLightSource = UnityWorldSpaceLightDir(i.worldPos);
+				// linear falloff for point lights , no falloff for directional lights
+				float distance = length(vertexToLightSource);	
+				half attenuation = LIGHT_ATTENUATION(i);
+				// dot product between normal and light direction for lambert lighting
+				half NdotL = saturate(dot(normalize(i.normal), normalize(vertexToLightSource)));
+				// we multiply with attenuation to create falloff
+				// we can skip the saturate, since we do not add ambient in this pass
+				fixed3 lightCol = _LightColor0.xyz * NdotL * attenuation;
+
 				fixed3 diffuseColor = tex2D(_MainTex, TRANSFORM_TEX(i.uv, _MainTex));
-				return diffuseColor * i.lightCol;
-			}
-			
+				return diffuseColor * lightCol;
+			}			
 			ENDCG
 		}	
 	}
