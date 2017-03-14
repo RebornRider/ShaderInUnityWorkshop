@@ -1,4 +1,4 @@
-﻿Shader "ShadersInUnityWorkshop/Reference/VertexAndFragmentShaders/LambertLighting/LambertLighting AmbientLight MultipleLights NormalMap ShadowCasting ShadowReceiving Fog - Reference"
+﻿Shader "ShadersInUnityWorkshop/Reference/VertexAndFragmentShaders/LambertLighting/LambertLighting AmbientLight MultipleLights NormalMap ShadowCasting ShadowReceiving FullShadows - Reference"
 {
 	Properties
 	{
@@ -59,10 +59,7 @@
 				
 			// compile shader into multiple variants, with and without shadows
 			// (we don't care about any lightmaps yet, so skip these variants)
-			#pragma multi_compile_fwdbase nolightmap nodirlightmap nodynlightmap novertexlight		
-
-			// Needed for fog variation to be compiled.
-			#pragma multi_compile_fog				
+			#pragma multi_compile_fwdbase nolightmap nodirlightmap nodynlightmap novertexlight						
 
 			struct vertexOutput {		
 				float4 modelPos : TEXCOORD0;
@@ -73,7 +70,6 @@
 				half3 tspace2 : TEXCOORD3; // tangent.z, bitangent.z, normal.z
 				float2 uv : TEXCOORD4;	
 				SHADOW_COORDS(5) // put shadows data into TEXCOORD6
-				UNITY_FOG_COORDS(6) // put fog data into TEXCOORD7
 				float4 pos : SV_POSITION;
 			};
 
@@ -85,9 +81,6 @@
 				o.uv = v.uv;	
 				// handle shadows
 				TRANSFER_SHADOW(o)
-				//Compute fog amount from clip space position.
-				UNITY_TRANSFER_FOG(o,o.pos);
-
 				half3 wNormal = UnityObjectToWorldNormal(v.normal);
 				half3 wTangent = UnityObjectToWorldDir(v.tangent.xyz);
 				// compute bitangent from cross product of normal and tangent
@@ -99,7 +92,7 @@
 				o.tspace2 = half3(wTangent.z, wBitangent.z, wNormal.z);
 				return o;
 			}
-			
+
 			fixed3 fragBasePass (vertexOutput i) : SV_Target
 			{
 				half3 worldNormal = decodeNormal(i.tspace0, i.tspace1, i.tspace2, TRANSFORM_TEX(i.uv, _NormalMap));
@@ -111,13 +104,9 @@
 				// compute shadow attenuation (1.0 = fully lit, 0.0 = fully shadowed)
 				fixed shadowAtten = SHADOW_ATTENUATION(i);
 
-				fixed3 diffuseColor = tex2D(_MainTex, TRANSFORM_TEX(i.uv, _MainTex));
-				
-				fixed4 finalColor = float4(diffuseColor * lightCol * shadowAtten, 1);
-				//Apply fog (additive pass are automatically handled)
-				UNITY_APPLY_FOG(i.fogCoord, finalColor); 
-			
-				return finalColor;
+				fixed3 diffuseColor = tex2D(_MainTex, TRANSFORM_TEX(i.uv, _MainTex));				
+
+				return diffuseColor * lightCol * shadowAtten;
 			}
 			ENDCG
 		}
@@ -184,8 +173,8 @@
 				fixed3 diffuseColor = tex2D(_MainTex, TRANSFORM_TEX(i.uv, _MainTex));
 				return diffuseColor * lightCol;
 			}	
-			ENDCG
-		}	
+			ENDCG	
+		}
 		
 		// shadow caster rendering pass
 		UsePass "Legacy Shaders/VertexLit/SHADOWCASTER"
