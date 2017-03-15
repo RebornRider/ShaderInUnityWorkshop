@@ -37,12 +37,14 @@
 
 		[Enum(UV0,0,UV1,1)] _UVSec ("UV Set for secondary textures", Float) = 0
 		// Extra properties
+		[DependentTexture(_BumpMap2)]
 		_TestRange("Tesft Range", Range(0,1)) = 0.5
 		_TestVector("TEst VEctor", Vector) = (1,0,0,1)
 		_TestVectorAlt1("TEst VEctor", Vector) = (1,0,0,1)
 		_TestVectorAlt2("TEst VEctor", Vector) = (1,0,0,1)
 		[Vector3(1)]
 		_TestVector3("TEst VEctor3", Vector) = (1,0,0,1)
+		[ColorDecorator(1,1,0,1)]
 		[Vector2(0, 1)]
 		_TestVector2("TEst VEctor2", Vector) = (1,0,0,1)
 		_BumpScale2("Scale2", Float) = 1.0
