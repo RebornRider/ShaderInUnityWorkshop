@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using UnityEngine;
 
 public static class ReflectionUtil
 {
@@ -58,14 +59,14 @@ public static class ReflectionUtil
 
     public static T1 InvokeMethod<T1>(this MethodInfo method, object obj, params object[] parameters)
     {
-        T1 result = default(T1);
+        T1 result;
         try
         {
             result = (T1)method.Invoke(obj, BindingFlags.InvokeMethod, null, parameters, CultureInfo.InvariantCulture);
         }
         catch (TargetParameterCountException e)
         {
-
+            Debug.Log(e);
             throw;
         }
 

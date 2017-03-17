@@ -1,477 +1,229 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Reflection;
+using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
-public class ExtendedMaterialEditor
+public class ExtendedMaterialEditor : MaterialEditor
 {
-    public MaterialEditor WrapedEditor { get; private set; }
 
-    public ExtendedMaterialEditor(MaterialEditor materialEditor)
-    {
-        WrapedEditor = materialEditor;
-    }
-
-    public int GetInstanceID()
-    {
-        return WrapedEditor.GetInstanceID();
-    }
-
-    public string name
-    {
-        get { return WrapedEditor.name; }
-        set { WrapedEditor.name = value; }
-    }
-
-    public HideFlags hideFlags
-    {
-        get { return WrapedEditor.hideFlags; }
-        set { WrapedEditor.hideFlags = value; }
-    }
-
-    public void SetDirty()
-    {
-        WrapedEditor.SetDirty();
-    }
-
-    public bool DrawDefaultInspector()
-    {
-        return WrapedEditor.DrawDefaultInspector();
-    }
-
-    public void Repaint()
-    {
-        WrapedEditor.Repaint();
-    }
-
-    public GUIContent GetPreviewTitle()
-    {
-        return WrapedEditor.GetPreviewTitle();
-    }
-
-    public string GetInfoString()
-    {
-        return WrapedEditor.GetInfoString();
-    }
-
-    public void ReloadPreviewInstances()
-    {
-        WrapedEditor.ReloadPreviewInstances();
-    }
-
-    public void DrawHeader()
-    {
-        WrapedEditor.DrawHeader();
-    }
-
-    public void DrawPreview(Rect previewArea)
-    {
-        WrapedEditor.DrawPreview(previewArea);
-    }
-
-    public bool UseDefaultMargins()
-    {
-        return WrapedEditor.UseDefaultMargins();
-    }
-
-    public void Initialize(Object[] targets)
-    {
-        WrapedEditor.Initialize(targets);
-    }
-
-    public bool MoveNextTarget()
-    {
-        return WrapedEditor.MoveNextTarget();
-    }
-
-    public void ResetTarget()
-    {
-        WrapedEditor.ResetTarget();
-    }
-
-    public Object target
-    {
-        get { return WrapedEditor.target; }
-        set { WrapedEditor.target = value; }
-    }
-
-    public Object[] targets
-    {
-        get { return WrapedEditor.targets; }
-    }
-
-    public SerializedObject serializedObject
-    {
-        get { return WrapedEditor.serializedObject; }
-    }
-
-    public void SetShader(Shader shader)
-    {
-        WrapedEditor.SetShader(shader);
-    }
-
-    public void SetShader(Shader newShader, bool registerUndo)
-    {
-        WrapedEditor.SetShader(newShader, registerUndo);
-    }
-
-    public void Awake()
-    {
-        WrapedEditor.Awake();
-    }
-
-    public void OnInspectorGUI()
-    {
-        WrapedEditor.OnInspectorGUI();
-    }
-
-    public void PropertiesChanged()
-    {
-        WrapedEditor.PropertiesChanged();
-    }
-
-    public float RangeProperty(MaterialProperty prop, string label)
-    {
-        return WrapedEditor.RangeProperty(prop, label);
-    }
-
-    public float RangeProperty(Rect position, MaterialProperty prop, string label)
-    {
-        return WrapedEditor.RangeProperty(position, prop, label);
-    }
-
-    public float FloatProperty(MaterialProperty prop, string label)
-    {
-        return WrapedEditor.FloatProperty(prop, label);
-    }
-
-    public float FloatProperty(Rect position, MaterialProperty prop, string label)
-    {
-        return WrapedEditor.FloatProperty(position, prop, label);
-    }
-
-    public Color ColorProperty(MaterialProperty prop, string label)
-    {
-        return WrapedEditor.ColorProperty(prop, label);
-    }
-
-    public Color ColorProperty(Rect position, MaterialProperty prop, string label)
-    {
-        return WrapedEditor.ColorProperty(position, prop, label);
-    }
-
-    public Vector4 VectorProperty(MaterialProperty prop, string label)
-    {
-        return WrapedEditor.VectorProperty(prop, label);
-    }
-
-    public Vector4 VectorProperty(Rect position, MaterialProperty prop, string label)
-    {
-        return WrapedEditor.VectorProperty(position, prop, label);
-    }
-
-    public void TextureScaleOffsetProperty(MaterialProperty property)
-    {
-        WrapedEditor.TextureScaleOffsetProperty(property);
-    }
-
-    public float TextureScaleOffsetProperty(Rect position, MaterialProperty property)
-    {
-        return WrapedEditor.TextureScaleOffsetProperty(position, property);
-    }
-
-    public float TextureScaleOffsetProperty(Rect position, MaterialProperty property, bool partOfTexturePropertyControl)
-    {
-        return WrapedEditor.TextureScaleOffsetProperty(position, property, partOfTexturePropertyControl);
-    }
-
-    public Texture TextureProperty(MaterialProperty prop, string label)
-    {
-        return WrapedEditor.TextureProperty(prop, label);
-    }
-
-    public Texture TextureProperty(MaterialProperty prop, string label, bool scaleOffset)
-    {
-        return WrapedEditor.TextureProperty(prop, label, scaleOffset);
-    }
-
-    public bool HelpBoxWithButton(GUIContent messageContent, GUIContent buttonContent)
-    {
-        return WrapedEditor.HelpBoxWithButton(messageContent, buttonContent);
-    }
-
-    public void TextureCompatibilityWarning(MaterialProperty prop)
-    {
-        WrapedEditor.TextureCompatibilityWarning(prop);
-    }
-
-    public Texture TexturePropertyMiniThumbnail(Rect position, MaterialProperty prop, string label, string tooltip)
-    {
-        return WrapedEditor.TexturePropertyMiniThumbnail(position, prop, label, tooltip);
-    }
-
-    public Rect GetTexturePropertyCustomArea(Rect position)
-    {
-        return WrapedEditor.GetTexturePropertyCustomArea(position);
-    }
-
-    public Texture TextureProperty(Rect position, MaterialProperty prop, string label)
-    {
-        return WrapedEditor.TextureProperty(position, prop, label);
-    }
-
-    public Texture TextureProperty(Rect position, MaterialProperty prop, string label, bool scaleOffset)
-    {
-        return WrapedEditor.TextureProperty(position, prop, label, scaleOffset);
-    }
-
-    public Texture TextureProperty(Rect position, MaterialProperty prop, string label, string tooltip, bool scaleOffset)
-    {
-        return WrapedEditor.TextureProperty(position, prop, label, tooltip, scaleOffset);
-    }
-
-    public float GetPropertyHeight(MaterialProperty prop)
-    {
-        return WrapedEditor.GetPropertyHeight(prop);
-    }
-
-    public float GetPropertyHeight(MaterialProperty prop, string label)
-    {
-        return WrapedEditor.GetPropertyHeight(prop, label);
-    }
-
-    public void BeginAnimatedCheck(MaterialProperty prop)
-    {
-        WrapedEditor.BeginAnimatedCheck(prop);
-    }
-
-    public void EndAnimatedCheck()
-    {
-        WrapedEditor.EndAnimatedCheck();
-    }
-
-    public void ShaderProperty(MaterialProperty prop, string label)
-    {
-        WrapedEditor.ShaderProperty(prop, label);
-    }
-
-    public void ShaderProperty(MaterialProperty prop, GUIContent label)
-    {
-        WrapedEditor.ShaderProperty(prop, label);
-    }
-
-    public void ShaderProperty(MaterialProperty prop, string label, int labelIndent)
-    {
-        WrapedEditor.ShaderProperty(prop, label, labelIndent);
-    }
-
-    public void ShaderProperty(MaterialProperty prop, GUIContent label, int labelIndent)
-    {
-        WrapedEditor.ShaderProperty(prop, label, labelIndent);
-    }
-
-    public void ShaderProperty(Rect position, MaterialProperty prop, string label)
-    {
-        WrapedEditor.ShaderProperty(position, prop, label);
-    }
-
-    public void ShaderProperty(Rect position, MaterialProperty prop, GUIContent label)
-    {
-        WrapedEditor.ShaderProperty(position, prop, label);
-    }
-
-    public void ShaderProperty(Rect position, MaterialProperty prop, string label, int labelIndent)
-    {
-        WrapedEditor.ShaderProperty(position, prop, label, labelIndent);
-    }
-
-    public void ShaderProperty(Rect position, MaterialProperty prop, GUIContent label, int labelIndent)
-    {
-        WrapedEditor.ShaderProperty(position, prop, label, labelIndent);
-    }
-
-    public void LightmapEmissionProperty()
-    {
-        WrapedEditor.LightmapEmissionProperty();
-    }
-
-    public void LightmapEmissionProperty(int labelIndent)
-    {
-        WrapedEditor.LightmapEmissionProperty(labelIndent);
-    }
-
-    public void LightmapEmissionProperty(Rect position, int labelIndent)
-    {
-        WrapedEditor.LightmapEmissionProperty(position, labelIndent);
-    }
-
-    public void DefaultShaderProperty(MaterialProperty prop, string label)
-    {
-        WrapedEditor.DefaultShaderProperty(prop, label);
-    }
-
-    public void DefaultShaderProperty(Rect position, MaterialProperty prop, string label)
-    {
-        WrapedEditor.DefaultShaderProperty(position, prop, label);
-    }
-
-    public float RangeProperty(string propertyName, string label, float v2, float v3)
-    {
-        return WrapedEditor.RangeProperty(propertyName, label, v2, v3);
-    }
-
-    public float FloatProperty(string propertyName, string label)
-    {
-        return WrapedEditor.FloatProperty(propertyName, label);
-    }
-
-    public Color ColorProperty(string propertyName, string label)
-    {
-        return WrapedEditor.ColorProperty(propertyName, label);
-    }
-
-    public Vector4 VectorProperty(string propertyName, string label)
-    {
-        return WrapedEditor.VectorProperty(propertyName, label);
-    }
-
-    public Texture TextureProperty(string propertyName, string label, ShaderUtil.ShaderPropertyTexDim texDim)
-    {
-        return WrapedEditor.TextureProperty(propertyName, label, texDim);
-    }
-
-    public Texture TextureProperty(string propertyName, string label, ShaderUtil.ShaderPropertyTexDim texDim, bool scaleOffset)
-    {
-        return WrapedEditor.TextureProperty(propertyName, label, texDim, scaleOffset);
-    }
-
-    public void ShaderProperty(Shader shader, int propertyIndex)
-    {
-        WrapedEditor.ShaderProperty(shader, propertyIndex);
-    }
-
-    public void SetDefaultGUIWidths()
-    {
-        WrapedEditor.SetDefaultGUIWidths();
-    }
-
-    public bool PropertiesGUI()
-    {
-        return WrapedEditor.PropertiesGUI();
-    }
-
-    public void PropertiesDefaultGUI(MaterialProperty[] props)
-    {
-        WrapedEditor.PropertiesDefaultGUI(props);
-    }
-
-    public void RegisterPropertyChangeUndo(string label)
-    {
-        WrapedEditor.RegisterPropertyChangeUndo(label);
-    }
-
-    public void OnPreviewSettings()
-    {
-        WrapedEditor.OnPreviewSettings();
-    }
-
-    public void DefaultPreviewSettingsGUI()
-    {
-        WrapedEditor.DefaultPreviewSettingsGUI();
-    }
-
-    public Texture2D RenderStaticPreview(string assetPath, Object[] subAssets, int width, int height)
-    {
-        return WrapedEditor.RenderStaticPreview(assetPath, subAssets, width, height);
-    }
-
-    public bool HasPreviewGUI()
-    {
-        return WrapedEditor.HasPreviewGUI();
-    }
-
-    public bool RequiresConstantRepaint()
-    {
-        return WrapedEditor.RequiresConstantRepaint();
-    }
-
-    public void OnInteractivePreviewGUI(Rect r, GUIStyle background)
-    {
-        WrapedEditor.OnInteractivePreviewGUI(r, background);
-    }
-
-    public void OnPreviewGUI(Rect r, GUIStyle background)
-    {
-        WrapedEditor.OnPreviewGUI(r, background);
-    }
-
-    public void DefaultPreviewGUI(Rect r, GUIStyle background)
-    {
-        WrapedEditor.DefaultPreviewGUI(r, background);
-    }
-
-    public void OnEnable()
-    {
-        WrapedEditor.OnEnable();
-    }
-
-    public void UndoRedoPerformed()
-    {
-        WrapedEditor.UndoRedoPerformed();
-    }
-
-    public void OnDisable()
-    {
-        WrapedEditor.OnDisable();
-    }
-
-    public void RenderQueueField()
-    {
-        WrapedEditor.RenderQueueField();
-    }
-
-    public void RenderQueueField(Rect r)
-    {
-        WrapedEditor.RenderQueueField(r);
-    }
-
-    public Rect TexturePropertySingleLine(GUIContent label, MaterialProperty textureProp)
-    {
-        return WrapedEditor.TexturePropertySingleLine(label, textureProp);
-    }
-
-    public Rect TexturePropertySingleLine(GUIContent label, MaterialProperty textureProp, MaterialProperty extraProperty1)
-    {
-        return WrapedEditor.TexturePropertySingleLine(label, textureProp, extraProperty1);
-    }
-
-    public Rect TexturePropertySingleLine(GUIContent label, MaterialProperty textureProp, MaterialProperty extraProperty1,
-        MaterialProperty extraProperty2)
-    {
-        return WrapedEditor.TexturePropertySingleLine(label, textureProp, extraProperty1, extraProperty2);
-    }
-
-    public Rect TexturePropertyWithHDRColor(GUIContent label, MaterialProperty textureProp, MaterialProperty colorProperty,
-        ColorPickerHDRConfig hdrConfig, bool showAlpha)
-    {
-        return WrapedEditor.TexturePropertyWithHDRColor(label, textureProp, colorProperty, hdrConfig, showAlpha);
-    }
-
-    public Rect TexturePropertyTwoLines(GUIContent label, MaterialProperty textureProp, MaterialProperty extraProperty1,
-        GUIContent label2, MaterialProperty extraProperty2)
-    {
-        return WrapedEditor.TexturePropertyTwoLines(label, textureProp, extraProperty1, label2, extraProperty2);
-    }
-
-    public bool isVisible
-    {
-        get { return WrapedEditor.isVisible; }
-    }
-}
-
-public static class ExtendedMaterialEditorHelper
-{
-    public static ExtendedMaterialEditor Extend(this MaterialEditor materialEditor)
-    {
-        return new ExtendedMaterialEditor(materialEditor);
+    private object lastTarget;
+
+    private Dictionary<string, MaterialPropertyInfo> cachedMaterialPropertyInfos = new Dictionary<string, MaterialPropertyInfo>();
+
+    class MaterialPropertyInfo
+    {
+        public MaterialPropertyDrawer drawer;
+        public List<MaterialPropertyDrawer> decorators;
+        public ExtendedPropertyDrawer extendedDrawer;
+        public List<ExtendedPropertyDecorator> extendedDecorators;
+    }
+
+    public override void OnInspectorGUI()
+    {
+        serializedObject.Update();
+        if (serializedObject.isEditingMultipleObjects || target == null)
+        {
+            return;
+        }
+        SerializedProperty theShader = serializedObject.FindProperty("m_Shader");
+        if (isVisible && !theShader.hasMultipleDifferentValues && theShader.objectReferenceValue != null)
+        {
+            MaterialProperty[] props = GetMaterialProperties(targets);
+            SetDefaultGUIWidths();
+
+
+
+            EditorGUI.BeginChangeCheck();
+            foreach (MaterialProperty prop in props)
+            {
+                if ((prop.flags &
+                     (MaterialProperty.PropFlags.HideInInspector | MaterialProperty.PropFlags.PerRendererData)) !=
+                    MaterialProperty.PropFlags.None)
+                {
+                    continue;
+                }
+
+                MaterialPropertyInfo materialPropertyInfo;
+                if (target != lastTarget)
+                {
+                    cachedMaterialPropertyInfos[prop.name] = AcquirePropertyDrawers(prop);
+                }
+                materialPropertyInfo = cachedMaterialPropertyInfos[prop.name];
+
+
+                float propertyHeight = GetTotalPropertyHeight(prop, materialPropertyInfo);
+
+                Rect position = EditorGUILayout.GetControlRect(true, propertyHeight);
+
+                float height = position.height;
+                position.height = 0.0f;
+                if (materialPropertyInfo.decorators.Count > 0)
+                {
+                    foreach (MaterialPropertyDrawer decoratorDrawer in materialPropertyInfo.decorators)
+                    {
+                        position.height = decoratorDrawer.GetPropertyHeight(prop, prop.displayName, this);
+                        float labelWidth = EditorGUIUtility.labelWidth;
+                        float fieldWidth = EditorGUIUtility.fieldWidth;
+                        decoratorDrawer.OnGUI(position, prop, prop.displayName, this);
+                        EditorGUIUtility.labelWidth = labelWidth;
+                        EditorGUIUtility.fieldWidth = fieldWidth;
+                        position.y += position.height;
+                        height -= position.height;
+                    }
+                }
+                position.height = height;
+                if (materialPropertyInfo.drawer != null)
+                {
+                    float labelWidth1 = EditorGUIUtility.labelWidth;
+                    float fieldWidth1 = EditorGUIUtility.fieldWidth;
+                    materialPropertyInfo.drawer.OnGUI(position, prop, prop.displayName, this);
+                    EditorGUIUtility.labelWidth = labelWidth1;
+                    EditorGUIUtility.fieldWidth = fieldWidth1;
+                }
+                else
+                {
+                    switch (prop.type)
+                    {
+                        case MaterialProperty.PropType.Color:
+                            ColorProperty(prop, prop.displayName);
+                            break;
+                        case MaterialProperty.PropType.Vector:
+                            VectorProperty(prop, prop.displayName);
+                            break;
+                        case MaterialProperty.PropType.Float:
+                            FloatProperty(prop, prop.displayName);
+                            break;
+                        case MaterialProperty.PropType.Range:
+                            RangeProperty(prop, prop.displayName);
+                            break;
+                        case MaterialProperty.PropType.Texture:
+                            TextureProperty(prop, prop.displayName);
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+                }
+            }
+
+            RenderQueueField();
+            if (EditorGUI.EndChangeCheck())
+            {
+                PropertiesChanged();
+            }
+
+            lastTarget = target;
+        }
+    }
+
+
+    private float GetTotalPropertyHeight(MaterialProperty prop, MaterialPropertyInfo materialPropertyInfo)
+    {
+        float propertyHeight = 0.0f;
+        if (materialPropertyInfo.decorators != null)
+        {
+            foreach (MaterialPropertyDrawer decoratorDrawer in materialPropertyInfo.decorators)
+                propertyHeight += decoratorDrawer.GetPropertyHeight(prop, prop.displayName, this);
+        }
+        if (materialPropertyInfo.drawer != null)
+            propertyHeight += materialPropertyInfo.drawer.GetPropertyHeight(prop, prop.displayName, this);
+        return propertyHeight;
+    }
+
+    private MaterialPropertyInfo AcquirePropertyDrawers(MaterialProperty prop)
+    {
+        var info = new MaterialPropertyInfo
+        {
+            drawer = null,
+            decorators = new List<MaterialPropertyDrawer>(),
+            extendedDrawer = null,
+            extendedDecorators = new List<ExtendedPropertyDecorator>()
+        };
+        string[] attributes = typeof(ShaderUtil).FindMethod("GetShaderPropertyAttributes",
+                BindingFlags.NonPublic | BindingFlags.Static, typeof(Shader), typeof(string))
+            .InvokeMethod<string[]>(null, ((Material)target).shader, prop.name);
+        attributes = attributes ?? new string[0];
+
+        if (attributes.Length > 0)
+        {
+            foreach (string attribute in attributes)
+            {
+                var propertyDrawer = GetShaderPropertyDrawer(attribute);
+                if (propertyDrawer != null)
+                {
+                    if (propertyDrawer.GetType().IsSubclassOf(typeof(ExtendedPropertyDrawer)))
+                    {
+                        info.extendedDrawer = (ExtendedPropertyDrawer)propertyDrawer;
+                    }
+                    else if (propertyDrawer.GetType().IsSubclassOf(typeof(ExtendedPropertyDecorator)))
+                    {
+                        info.extendedDecorators.Add((ExtendedPropertyDecorator)propertyDrawer);
+                    }
+                    else if (propertyDrawer.GetType().Name.EndsWith("Decorator"))
+                    {
+                        info.decorators.Add(propertyDrawer);
+                    }
+                    else
+                    {
+                        info.drawer = propertyDrawer;
+                    }
+                }
+            }
+        }
+        return info;
+    }
+
+    private static MaterialPropertyDrawer GetShaderPropertyDrawer(string attrib)
+    {
+        string str = attrib;
+        string argsText = string.Empty;
+        Match match = Regex.Match(attrib, "(\\w+)\\s*\\((.*)\\)");
+        if (match.Success)
+        {
+            str = match.Groups[1].Value;
+            argsText = match.Groups[2].Value.Trim();
+        }
+        var materialPropertyDrawers =
+            AppDomain.CurrentDomain.GetAssemblies()
+                .Select(a => a.GetTypes().Where(t => t.IsSubclassOf(typeof(MaterialPropertyDrawer)))).SelectMany(c => c);
+        foreach (Type type in materialPropertyDrawers)
+        {
+            if (type.Name == str || type.Name == str + "Drawer" ||
+                (type.Name == "Material" + str + "Drawer" || type.Name == str + "Decorator") ||
+                type.Name == "Material" + str + "Decorator")
+            {
+                try
+                {
+                    return CreatePropertyDrawer(type, argsText);
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogWarningFormat("Failed to create material drawer {0} with arguments '{1}'", str, argsText);
+                    return null;
+                }
+            }
+        }
+        return null;
+    }
+
+    private static MaterialPropertyDrawer CreatePropertyDrawer(Type type, string argsText)
+    {
+        if (string.IsNullOrEmpty(argsText))
+            return Activator.CreateInstance(type) as MaterialPropertyDrawer;
+        string[] strArray = argsText.Split(',');
+        object[] objArray = new object[strArray.Length];
+        for (int index = 0; index < strArray.Length; ++index)
+        {
+            string s = strArray[index].Trim();
+            float result;
+            objArray[index] =
+                !float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture.NumberFormat, out result)
+                    ? s
+                    : (object)result;
+        }
+        return Activator.CreateInstance(type, objArray) as MaterialPropertyDrawer;
     }
 }
