@@ -96,7 +96,7 @@ public class ExtendedMaterialEditor : MaterialEditor
                 {
                     float labelWidth = EditorGUIUtility.labelWidth;
                     float fieldWidth = EditorGUIUtility.fieldWidth;
-                    propertyInfo.ExtendedDrawer.OnGUI(position, prop, prop.displayName, this,
+                    propertyInfo.ExtendedDrawer.ExtendedOnGUI(position, prop, prop.displayName, this,
                         propertyInfo.ExtendedAttributes, props);
                     EditorGUIUtility.labelWidth = labelWidth;
                     EditorGUIUtility.fieldWidth = fieldWidth;
@@ -134,100 +134,81 @@ public class ExtendedMaterialEditor : MaterialEditor
             case MaterialProperty.PropType.Vector:
                 {
                     Rect position = MaterialPropertyDrawerHelper.GetPropertyRect(this, prop, label.text, true);
-                    BackgroundColorAttribute backgroundColorAttribute = attributes.OfType<BackgroundColorAttribute>().FirstOrDefault();
-                    if (backgroundColorAttribute != null)
+                    BackgroundColorAttribute backgroundColorAttribute = BackgroundColorAttributeHelper.GetBackgroundColorAttribute(attributes);
+                    backgroundColorAttribute.BeginBackgroundColor();
+                    using (new EditorGUI.DisabledScope(DependantPropertyHelper.IsDisabled(attributes, allProperties)))
                     {
-                        EditorGUI.DrawRect(position, backgroundColorAttribute.Color);
+                        EditorGUI.BeginChangeCheck();
+                        EditorGUI.showMixedValue = prop.hasMixedValue;
+                        float labelWidth = EditorGUIUtility.labelWidth;
+                        EditorGUIUtility.labelWidth = 0.0f;
+                        Vector4 vector4 = EditorGUI.Vector4Field(position, label, prop.vectorValue);
+                        EditorGUIUtility.labelWidth = labelWidth;
+                        EditorGUI.showMixedValue = false;
+                        if (EditorGUI.EndChangeCheck())
+                        {
+                            prop.vectorValue = vector4;
+                        }
                     }
-                    var isDisabledBecauseDependantTextureIsUnassigned =
-                        attributes.OfType<DependentTextureAttribute>()
-                            .Any(x => x.IsDisabled(allProperties));
-                    if (isDisabledBecauseDependantTextureIsUnassigned)
-                    {
-                        EditorGUI.BeginDisabledGroup(true);
-                    }
-                    EditorGUI.BeginChangeCheck();
-                    EditorGUI.showMixedValue = prop.hasMixedValue;
-                    float labelWidth = EditorGUIUtility.labelWidth;
-                    EditorGUIUtility.labelWidth = 0.0f;
-                    Vector4 vector4 = EditorGUI.Vector4Field(position, label, prop.vectorValue);
-                    EditorGUIUtility.labelWidth = labelWidth;
-                    EditorGUI.showMixedValue = false;
-                    if (EditorGUI.EndChangeCheck())
-                    {
-                        prop.vectorValue = vector4;
-                    }
-                    if (isDisabledBecauseDependantTextureIsUnassigned)
-                    {
-                        EditorGUI.EndDisabledGroup();
-                    }
+                    backgroundColorAttribute.EndBackgroundColor();
                     break;
                 }
 
             case MaterialProperty.PropType.Float:
                 {
                     Rect position = MaterialPropertyDrawerHelper.GetPropertyRect(this, prop, label.text, true);
-                    BackgroundColorAttribute backgroundColorAttribute = attributes.OfType<BackgroundColorAttribute>().FirstOrDefault();
-                    if (backgroundColorAttribute != null)
+                    BackgroundColorAttribute backgroundColorAttribute = BackgroundColorAttributeHelper.GetBackgroundColorAttribute(attributes);
+
+                    backgroundColorAttribute.BeginBackgroundColor();
+                    using (new EditorGUI.DisabledScope(DependantPropertyHelper.IsDisabled(attributes, allProperties)))
                     {
-                        EditorGUI.DrawRect(position, backgroundColorAttribute.Color);
+                        EditorGUI.BeginChangeCheck();
+                        EditorGUI.showMixedValue = prop.hasMixedValue;
+                        float num = EditorGUI.FloatField(position, label, prop.floatValue);
+                        EditorGUI.showMixedValue = false;
+                        if (EditorGUI.EndChangeCheck())
+                        {
+                            prop.floatValue = num;
+                        }
                     }
-                    var isDisabledBecauseDependantTextureIsUnassigned =
-                        attributes.OfType<DependentTextureAttribute>()
-                            .Any(x => x.IsDisabled(allProperties));
-                    if (isDisabledBecauseDependantTextureIsUnassigned)
-                    {
-                        EditorGUI.BeginDisabledGroup(true);
-                    }
-                    EditorGUI.BeginChangeCheck();
-                    EditorGUI.showMixedValue = prop.hasMixedValue;
-                    float num = EditorGUI.FloatField(position, label, prop.floatValue);
-                    EditorGUI.showMixedValue = false;
-                    if (EditorGUI.EndChangeCheck())
-                    {
-                        prop.floatValue = num;
-                    }
-                    if (isDisabledBecauseDependantTextureIsUnassigned)
-                    {
-                        EditorGUI.EndDisabledGroup();
-                    }
+
+                    backgroundColorAttribute.EndBackgroundColor();
+
                     break;
                 }
             case MaterialProperty.PropType.Range:
                 {
                     Rect position = MaterialPropertyDrawerHelper.GetPropertyRect(this, prop, label.text, true);
-                    BackgroundColorAttribute backgroundColorAttribute = attributes.OfType<BackgroundColorAttribute>().FirstOrDefault();
-                    if (backgroundColorAttribute != null)
+                    BackgroundColorAttribute backgroundColorAttribute = BackgroundColorAttributeHelper.GetBackgroundColorAttribute(attributes);
+                    backgroundColorAttribute.BeginBackgroundColor();
+                    using (new EditorGUI.DisabledScope(DependantPropertyHelper.IsDisabled(attributes, allProperties)))
                     {
-                        EditorGUI.DrawRect(position, backgroundColorAttribute.Color);
+                        EditorGUI.BeginChangeCheck();
+                        EditorGUI.showMixedValue = prop.hasMixedValue;
+                        float labelWidth = EditorGUIUtility.labelWidth;
+                        EditorGUIUtility.labelWidth = 0.0f;
+                        float num = EditorGUI.Slider(position, label, prop.floatValue, prop.rangeLimits.x, prop.rangeLimits.y);
+                        EditorGUI.showMixedValue = false;
+                        EditorGUIUtility.labelWidth = labelWidth;
+                        if (EditorGUI.EndChangeCheck())
+                        {
+                            prop.floatValue = num;
+                        }
                     }
-                    var isDisabledBecauseDependantTextureIsUnassigned =
-                        attributes.OfType<DependentTextureAttribute>()
-                            .Any(x => x.IsDisabled(allProperties));
-                    if (isDisabledBecauseDependantTextureIsUnassigned)
-                    {
-                        EditorGUI.BeginDisabledGroup(true);
-                    }
-                    EditorGUI.BeginChangeCheck();
-                    EditorGUI.showMixedValue = prop.hasMixedValue;
-                    float labelWidth = EditorGUIUtility.labelWidth;
-                    EditorGUIUtility.labelWidth = 0.0f;
-                    float num = EditorGUI.Slider(position, label, prop.floatValue, prop.rangeLimits.x, prop.rangeLimits.y);
-                    EditorGUI.showMixedValue = false;
-                    EditorGUIUtility.labelWidth = labelWidth;
-                    if (EditorGUI.EndChangeCheck())
-                    {
-                        prop.floatValue = num;
-                    }
-                    if (isDisabledBecauseDependantTextureIsUnassigned)
-                    {
-                        EditorGUI.EndDisabledGroup();
-                    }
+                    backgroundColorAttribute.EndBackgroundColor();
                     break;
                 }
             case MaterialProperty.PropType.Texture:
-                TextureProperty(prop, prop.displayName);
-                break;
+                {
+                    BackgroundColorAttribute backgroundColorAttribute = BackgroundColorAttributeHelper.GetBackgroundColorAttribute(attributes);
+                    backgroundColorAttribute.BeginBackgroundColor();
+                    using (new EditorGUI.DisabledScope(DependantPropertyHelper.IsDisabled(attributes, allProperties)))
+                    {
+                        TextureProperty(prop, prop.displayName);
+                    }
+                    backgroundColorAttribute.EndBackgroundColor();
+                    break;
+                }
             default:
                 throw new ArgumentOutOfRangeException();
         }
@@ -236,30 +217,30 @@ public class ExtendedMaterialEditor : MaterialEditor
     private void DrawDefaultColor(MaterialProperty prop, IEnumerable<ExtendedPropertyAttribute> attributes, IEnumerable<MaterialProperty> allProperties, GUIContent label)
     {
         Rect position = MaterialPropertyDrawerHelper.GetPropertyRect(this, prop, label.text, true);
-        BackgroundColorAttribute backgroundColorAttribute = attributes.OfType<BackgroundColorAttribute>().FirstOrDefault();
+
+        attributes = attributes.EmptyIfNull();
+        allProperties = allProperties.EmptyIfNull();
+
+        BackgroundColorAttribute backgroundColorAttribute = BackgroundColorAttributeHelper.GetBackgroundColorAttribute(attributes);
         if (backgroundColorAttribute != null)
         {
-            EditorGUI.DrawRect(position, backgroundColorAttribute.Color);
+            backgroundColorAttribute.BeginBackgroundColor();
         }
-        var isDisabledBecauseDependantTextureIsUnassigned =
-            attributes.OfType<DependentTextureAttribute>()
-                .Any(x => x.IsDisabled(allProperties));
-        if (isDisabledBecauseDependantTextureIsUnassigned)
+        using (new EditorGUI.DisabledScope(DependantPropertyHelper.IsDisabled(attributes, allProperties)))
         {
-            EditorGUI.BeginDisabledGroup(true);
+            EditorGUI.BeginChangeCheck();
+            EditorGUI.showMixedValue = prop.hasMixedValue;
+            bool hdr = (prop.flags & MaterialProperty.PropFlags.HDR) != MaterialProperty.PropFlags.None;
+            Color color = EditorGUI.ColorField(position, label, prop.colorValue, true, true, hdr, null);
+            EditorGUI.showMixedValue = false;
+            if (EditorGUI.EndChangeCheck())
+            {
+                prop.colorValue = color;
+            }
         }
-        EditorGUI.BeginChangeCheck();
-        EditorGUI.showMixedValue = prop.hasMixedValue;
-        bool hdr = (prop.flags & MaterialProperty.PropFlags.HDR) != MaterialProperty.PropFlags.None;
-        Color color = EditorGUI.ColorField(position, label, prop.colorValue, true, true, hdr, null);
-        EditorGUI.showMixedValue = false;
-        if (EditorGUI.EndChangeCheck())
+        if (backgroundColorAttribute != null)
         {
-            prop.colorValue = color;
-        }
-        if (isDisabledBecauseDependantTextureIsUnassigned)
-        {
-            EditorGUI.EndDisabledGroup();
+            backgroundColorAttribute.EndBackgroundColor();
         }
     }
 

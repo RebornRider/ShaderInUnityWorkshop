@@ -39,14 +39,16 @@
 		// Extra properties
 		[Space(50)]
 		[Header(More stuff)]
-		[DependentTexture(_BumpMap2)]
+		[DependentProperty(_BumpMap2)]
 		_TestRange("Test Range", Range(0,1)) = 0.5
+		[DependentProperty(_TestRange,Equal,1)]
 		_TestVector("TEst VEctor", Vector) = (1,0,0,1)
 		[BackgroundColor(0,1,0.5,1)]
-		[DependentTexture(_BumpMap2)]
+		[DependentProperty(_BumpMap2)]
 		_TestVectorAlt1("TEst VEctor", Vector) = (1,0,0,1)
 		_TestVectorAlt2("TEst VEctor", Vector) = (1,0,0,1)
 		[Vector3(1)]
+		[BackgroundColor(0,0.5,0.5,1)]
 		_TestVector3("TEst VEctor3", Vector) = (1,0,0,1)
 		[BackgroundColor(0,1,0,1)]
 		[Vector2(0, 1)]
@@ -56,14 +58,14 @@
 		_BumpMap2("Normal Map2", 2D) = "bump" {}
 
 		_Parallax2 ("Height Scale2", Range (0.005, 0.08)) = 0.02
-		
-		[DependentTexture(_BumpMap2)]
+		[DependentProperty(_Parallax2,GreaterEqual,0.03)]
 		_ParallaxMap2 ("Height Map2", 2D) = "black" {}
 		[Vector3(1)]
-		[DependentTexture(_BumpMap2)]
+		[DependentProperty(_BumpMap2)]
 		_TestVector3Dependent("TEst VEctor3", Vector) = (1,0,0,1)
 		[IntRange]
 		_OcclusionStrength2("Strength2", Range(0.0, 1.0)) = 1.0
+		[DependentProperty(_OcclusionStrength2,Equal,1.0)]
 		_OcclusionMap2("Occlusion2", 2D) = "white" {}
 
 		_EmissionColor2("Color2", Color) = (0,0,0)
