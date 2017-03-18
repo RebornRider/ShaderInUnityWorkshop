@@ -1,6 +1,8 @@
-﻿using System;
+﻿using JetBrains.Annotations;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
@@ -48,7 +50,8 @@ public class ExtendedStandardShaderGUI : ShaderGUI
         var targetMat = materialEditor.target as Material;
         if (targetMat.renderQueue != 2000 && targetMat.renderQueue != 2450 && targetMat.renderQueue != 3000)
         {
-            EditorGUILayout.HelpBox("This material is using a custom RenderQeue of: " + targetMat.renderQueue, MessageType.Info);
+            EditorGUILayout.HelpBox("This material is using a custom RenderQeue of: " + targetMat.renderQueue,
+                MessageType.Info);
         }
         materialEditor.RenderQueueField();
 
@@ -77,20 +80,87 @@ public class ExtendedStandardShaderGUI : ShaderGUI
 }
 
 
-
 public abstract class ExtendedPropertyDrawer : MaterialPropertyDrawer
 {
-    public abstract override void OnGUI(Rect position, MaterialProperty prop, string label, MaterialEditor editor);
-}
+    public abstract void OnGUI(Rect position, MaterialProperty prop, string label, MaterialEditor editor,
+        IEnumerable<ExtendedPropertyAttribute> attributes, IEnumerable<MaterialProperty> allProperties);
 
-public abstract class ExtendedPropertyDecorator : MaterialPropertyDrawer
-{
-    public override float GetPropertyHeight(MaterialProperty prop, string label, MaterialEditor editor)
+    [Obsolete(
+        "Call OnGUI(Rect position, MaterialProperty prop, string label, MaterialEditor editor, IEnumerable<ExtendedPropertyAttribute> attributes) instead"
+    )]
+    public sealed override void OnGUI(Rect position, MaterialProperty prop, GUIContent label, MaterialEditor editor)
     {
-        return 0;
+        OnGUI(position, prop, label.text, editor, null, null);
+    }
+
+    [Obsolete(
+        "Call OnGUI(Rect position, MaterialProperty prop, string label, MaterialEditor editor, IEnumerable<ExtendedPropertyAttribute> attributes) instead"
+    )]
+    public sealed override void OnGUI(Rect position, MaterialProperty prop, string label, MaterialEditor editor)
+    {
+        OnGUI(position, prop, label, editor, null, null);
     }
 }
 
+public abstract class ExtendedPropertyAttribute : MaterialPropertyDrawer
+{
+    public sealed override float GetPropertyHeight(MaterialProperty prop, string label, MaterialEditor editor)
+    {
+        return 0;
+    }
+
+    public sealed override void OnGUI(Rect position, MaterialProperty prop, GUIContent label, MaterialEditor editor)
+    {
+    }
+
+    public sealed override void OnGUI(Rect position, MaterialProperty prop, string label, MaterialEditor editor)
+    {
+    }
+}
+
+public static class MaterialPropertyDrawerHelper
+{
+    public static Rect GetPropertyRect(MaterialEditor editor, MaterialProperty prop, string label, bool ignoreDrawer)
+
+    {
+        float height = 0.0f;
+
+        if (!ignoreDrawer)
+
+        {
+            object handler = ReflectionUtil.GetUnityEditorType("MaterialPropertyHandler").FindMethod("GetHandler",
+                    BindingFlags.NonPublic | BindingFlags.Static, typeof(Shader), typeof(string))
+                .InvokeMethod<object>(null, ((Material)editor.target).shader, prop.name);
+
+
+            if (handler != null)
+
+            {
+                height =
+                    handler.GetType()
+                        .FindMethod("GetPropertyHeight", BindingFlags.Default, typeof(MaterialEditor), typeof(string),
+                            typeof(MaterialEditor))
+                        .InvokeMethod<float>(handler, prop, label ?? prop.displayName, editor);
+
+
+                if (
+                    handler.GetType()
+                        .FindProperty("propertyDrawer", BindingFlags.Default)
+                        .GetGetMethod()
+                        .InvokeMethod<MaterialPropertyDrawer>(handler) != null)
+
+                {
+                    return EditorGUILayout.GetControlRect(true, height, EditorStyles.layerMaskField);
+                }
+            }
+        }
+
+        return EditorGUILayout.GetControlRect(true, height + MaterialEditor.GetDefaultPropertyHeight(prop),
+            EditorStyles.layerMaskField);
+    }
+}
+
+[UsedImplicitly]
 public class Vector3Drawer : ExtendedPropertyDrawer
 {
     private readonly float w;
@@ -105,8 +175,24 @@ public class Vector3Drawer : ExtendedPropertyDrawer
         return base.GetPropertyHeight(prop, label, editor) * 1;
     }
 
-    public override void OnGUI(Rect position, MaterialProperty prop, string label, MaterialEditor editor)
+    public override void OnGUI(Rect position, MaterialProperty prop, string label, MaterialEditor editor,
+        IEnumerable<ExtendedPropertyAttribute> attributes, IEnumerable<MaterialProperty> allProperties)
     {
+        position = MaterialPropertyDrawerHelper.GetPropertyRect(editor, prop, label, true);
+
+        BackgroundColorAttribute backgroundColorAttribute = attributes.OfType<BackgroundColorAttribute>().FirstOrDefault();
+        if (backgroundColorAttribute != null)
+        {
+            EditorGUI.DrawRect(position, backgroundColorAttribute.Color);
+        }
+
+        var isDisabledBecauseDependantTextureIsUnassigned =
+            attributes.OfType<DependentTextureAttribute>()
+                .Any(x => x.IsDisabled(allProperties));
+        if (isDisabledBecauseDependantTextureIsUnassigned)
+        {
+            EditorGUI.BeginDisabledGroup(true);
+        }
         EditorGUI.BeginChangeCheck();
         EditorGUI.showMixedValue = prop.hasMixedValue;
         float labelWidth = EditorGUIUtility.labelWidth;
@@ -116,9 +202,15 @@ public class Vector3Drawer : ExtendedPropertyDrawer
         EditorGUI.showMixedValue = false;
         if (EditorGUI.EndChangeCheck())
             prop.vectorValue = new Vector4(vector3.x, vector3.y, vector3.z, w);
+
+        if (isDisabledBecauseDependantTextureIsUnassigned)
+        {
+            EditorGUI.EndDisabledGroup();
+        }
     }
 }
 
+[UsedImplicitly]
 public class Vector2Drawer : ExtendedPropertyDrawer
 {
     private readonly float z;
@@ -135,8 +227,25 @@ public class Vector2Drawer : ExtendedPropertyDrawer
         return base.GetPropertyHeight(prop, label, editor) * 1;
     }
 
-    public override void OnGUI(Rect position, MaterialProperty prop, string label, MaterialEditor editor)
+    public override void OnGUI(Rect position, MaterialProperty prop, string label, MaterialEditor editor,
+        IEnumerable<ExtendedPropertyAttribute> attributes, IEnumerable<MaterialProperty> allProperties)
     {
+        position = MaterialPropertyDrawerHelper.GetPropertyRect(editor, prop, label, true);
+
+
+        BackgroundColorAttribute backgroundColorAttribute = attributes.OfType<BackgroundColorAttribute>().FirstOrDefault();
+        if (backgroundColorAttribute != null)
+        {
+            EditorGUI.DrawRect(position, backgroundColorAttribute.Color);
+        }
+        var isDisabledBecauseDependantTextureIsUnassigned =
+            attributes.OfType<DependentTextureAttribute>()
+                .Any(x => x.IsDisabled(allProperties));
+        if (isDisabledBecauseDependantTextureIsUnassigned)
+        {
+            EditorGUI.BeginDisabledGroup(true);
+        }
+
         EditorGUI.BeginChangeCheck();
         EditorGUI.showMixedValue = prop.hasMixedValue;
         float labelWidth = EditorGUIUtility.labelWidth;
@@ -145,31 +254,46 @@ public class Vector2Drawer : ExtendedPropertyDrawer
         EditorGUIUtility.labelWidth = labelWidth;
         EditorGUI.showMixedValue = false;
         if (EditorGUI.EndChangeCheck())
+        {
             prop.vectorValue = new Vector4(vector2.x, vector2.y, z, w);
+        }
+
+        if (isDisabledBecauseDependantTextureIsUnassigned)
+        {
+            EditorGUI.EndDisabledGroup();
+        }
     }
 }
 
 
-public class DependentTextureDecorator : ExtendedPropertyDecorator
+[UsedImplicitly]
+public class DependentTextureAttribute : ExtendedPropertyAttribute
 {
     private readonly string propertyName;
 
-    public DependentTextureDecorator(string propertyName)
+    public DependentTextureAttribute(string propertyName)
     {
         this.propertyName = propertyName;
     }
+
+    public bool IsDisabled(IEnumerable<MaterialProperty> allProperties)
+    {
+        var property = allProperties.SingleOrDefault(p => p.name == propertyName);
+        return property != null && property.textureValue == null;
+    }
 }
 
-public class ColorDecorator : ExtendedPropertyDecorator
+[UsedImplicitly]
+public class BackgroundColorAttribute : ExtendedPropertyAttribute
 {
     public readonly Color Color = Color.magenta;
 
-    public ColorDecorator(float r, float g, float b, float a)
+    public BackgroundColorAttribute(float r, float g, float b, float a)
     {
         this.Color = new Color(r, g, b, a);
     }
 
-    public ColorDecorator(string colorHTML)
+    public BackgroundColorAttribute(string colorHTML)
     {
         Color parsedColor;
         if (ColorUtility.TryParseHtmlString(colorHTML, out parsedColor))

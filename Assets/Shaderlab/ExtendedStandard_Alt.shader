@@ -42,11 +42,13 @@
 		[DependentTexture(_BumpMap2)]
 		_TestRange("Test Range", Range(0,1)) = 0.5
 		_TestVector("TEst VEctor", Vector) = (1,0,0,1)
+		[BackgroundColor(0,1,0.5,1)]
+		[DependentTexture(_BumpMap2)]
 		_TestVectorAlt1("TEst VEctor", Vector) = (1,0,0,1)
 		_TestVectorAlt2("TEst VEctor", Vector) = (1,0,0,1)
 		[Vector3(1)]
 		_TestVector3("TEst VEctor3", Vector) = (1,0,0,1)
-		[ColorDecorator(1,1,0,1)]
+		[BackgroundColor(0,1,0,1)]
 		[Vector2(0, 1)]
 		_TestVector2("TEst VEctor2", Vector) = (1,0,0,1)
 		[PowerSlider(3.0)]
@@ -65,6 +67,8 @@
 		_OcclusionMap2("Occlusion2", 2D) = "white" {}
 
 		_EmissionColor2("Color2", Color) = (0,0,0)
+		[BackgroundColor(0,0,1,1)]
+		_EmissionColor3("Color3", Color) = (0,0,0)
 		_EmissionMap2("Emission2", 2D) = "white" {}
 		
 		_DetailMask2("Detail Mask 2", 2D) = "white" {}
