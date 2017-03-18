@@ -80,11 +80,11 @@ public class ExtendedStandardShaderGUI : ShaderGUI
 
 public abstract class ExtendedPropertyDrawer : MaterialPropertyDrawer
 {
+    public abstract override void OnGUI(Rect position, MaterialProperty prop, string label, MaterialEditor editor);
 }
 
 public abstract class ExtendedPropertyDecorator : MaterialPropertyDrawer
 {
-
     public override float GetPropertyHeight(MaterialProperty prop, string label, MaterialEditor editor)
     {
         return 0;
@@ -93,30 +93,60 @@ public abstract class ExtendedPropertyDecorator : MaterialPropertyDrawer
 
 public class Vector3Drawer : ExtendedPropertyDrawer
 {
-    private readonly int w;
+    private readonly float w;
 
     public Vector3Drawer(float w)
     {
-        this.w = 1;
+        this.w = w;
+    }
+
+    public override float GetPropertyHeight(MaterialProperty prop, string label, MaterialEditor editor)
+    {
+        return base.GetPropertyHeight(prop, label, editor) * 1;
+    }
+
+    public override void OnGUI(Rect position, MaterialProperty prop, string label, MaterialEditor editor)
+    {
+        EditorGUI.BeginChangeCheck();
+        EditorGUI.showMixedValue = prop.hasMixedValue;
+        float labelWidth = EditorGUIUtility.labelWidth;
+        EditorGUIUtility.labelWidth = 0.0f;
+        Vector3 vector3 = EditorGUI.Vector3Field(position, label, prop.vectorValue);
+        EditorGUIUtility.labelWidth = labelWidth;
+        EditorGUI.showMixedValue = false;
+        if (EditorGUI.EndChangeCheck())
+            prop.vectorValue = new Vector4(vector3.x, vector3.y, vector3.z, w);
     }
 }
 
 public class Vector2Drawer : ExtendedPropertyDrawer
 {
     private readonly float z;
-    private readonly int w;
+    private readonly float w;
 
     public Vector2Drawer(float z, float w)
     {
         this.z = z;
-        this.w = 1;
+        this.w = w;
     }
 
     public override float GetPropertyHeight(MaterialProperty prop, string label, MaterialEditor editor)
     {
-        return 0;
+        return base.GetPropertyHeight(prop, label, editor) * 1;
     }
 
+    public override void OnGUI(Rect position, MaterialProperty prop, string label, MaterialEditor editor)
+    {
+        EditorGUI.BeginChangeCheck();
+        EditorGUI.showMixedValue = prop.hasMixedValue;
+        float labelWidth = EditorGUIUtility.labelWidth;
+        EditorGUIUtility.labelWidth = 0.0f;
+        Vector2 vector2 = EditorGUI.Vector2Field(position, label, prop.vectorValue);
+        EditorGUIUtility.labelWidth = labelWidth;
+        EditorGUI.showMixedValue = false;
+        if (EditorGUI.EndChangeCheck())
+            prop.vectorValue = new Vector4(vector2.x, vector2.y, z, w);
+    }
 }
 
 

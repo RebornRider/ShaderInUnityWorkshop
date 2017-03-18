@@ -40,7 +40,7 @@
 		[Space(50)]
 		[Header(More stuff)]
 		[DependentTexture(_BumpMap2)]
-		_TestRange("Tesft Range", Range(0,1)) = 0.5
+		_TestRange("Test Range", Range(0,1)) = 0.5
 		_TestVector("TEst VEctor", Vector) = (1,0,0,1)
 		_TestVectorAlt1("TEst VEctor", Vector) = (1,0,0,1)
 		_TestVectorAlt2("TEst VEctor", Vector) = (1,0,0,1)
