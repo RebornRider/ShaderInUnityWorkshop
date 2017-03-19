@@ -14,6 +14,8 @@ public class ExtendedMaterialEditor : MaterialEditor
     private readonly Dictionary<string, MaterialPropertyInfo> cachedMaterialPropertyInfos =
         new Dictionary<string, MaterialPropertyInfo>();
 
+    private MaterialProperty[] materialProperties;
+
     private class MaterialPropertyInfo
     {
         public MaterialPropertyDrawer Drawer;
@@ -62,16 +64,15 @@ public class ExtendedMaterialEditor : MaterialEditor
         if (IsDifferentTarget())
         {
             cachedMaterialPropertyInfos.Clear();
+            materialProperties = GetMaterialProperties(targets);
         }
 
         SerializedProperty theShader = serializedObject.FindProperty("m_Shader");
         if (!theShader.hasMultipleDifferentValues && theShader.objectReferenceValue != null)
         {
-            MaterialProperty[] props = GetMaterialProperties(targets);
-
             SetDefaultGUIWidths();
             EditorGUI.BeginChangeCheck();
-            foreach (MaterialProperty prop in props)
+            foreach (MaterialProperty prop in materialProperties)
             {
                 if ((prop.flags &
                      (MaterialProperty.PropFlags.HideInInspector | MaterialProperty.PropFlags.PerRendererData)) !=
@@ -97,7 +98,7 @@ public class ExtendedMaterialEditor : MaterialEditor
                     float labelWidth = EditorGUIUtility.labelWidth;
                     float fieldWidth = EditorGUIUtility.fieldWidth;
                     propertyInfo.ExtendedDrawer.ExtendedOnGUI(position, prop, prop.displayName, this,
-                        propertyInfo.ExtendedAttributes, props);
+                        propertyInfo.ExtendedAttributes, materialProperties);
                     EditorGUIUtility.labelWidth = labelWidth;
                     EditorGUIUtility.fieldWidth = fieldWidth;
                 }
@@ -107,7 +108,7 @@ public class ExtendedMaterialEditor : MaterialEditor
                 }
                 else
                 {
-                    DefaultDraw(prop, propertyInfo.ExtendedAttributes, props);
+                    DefaultDraw(prop, propertyInfo.ExtendedAttributes, materialProperties);
                 }
             }
 
@@ -118,6 +119,45 @@ public class ExtendedMaterialEditor : MaterialEditor
             }
 
             lastTarget = target;
+        }
+    }
+
+    void OnSceneGUI()
+    {
+        if (Selection.activeGameObject && Selection.gameObjects.Length == 1)
+        {
+            var objectPosition = Selection.activeGameObject.transform.position;
+            Handles.matrix = Selection.activeTransform.localToWorldMatrix;
+            foreach (var prop in materialProperties ?? new MaterialProperty[0])
+            {
+                if (cachedMaterialPropertyInfos.ContainsKey(prop.name) == false)
+                {
+                    continue;
+                }
+                MaterialPropertyInfo propertyInfo = cachedMaterialPropertyInfos[prop.name];
+
+                if (propertyInfo != null && propertyInfo.ExtendedDrawer is Vector3Drawer && DependantPropertyHelper.IsDisabled(propertyInfo.ExtendedAttributes, materialProperties) == false)
+                {
+                    prop.vectorValue = Handles.PositionHandle(prop.vectorValue, Quaternion.identity);
+
+                    var style = new GUIStyle(GUI.skin.box)
+                    {
+                        alignment = TextAnchor.MiddleCenter,
+                        fontStyle = FontStyle.Bold,
+                        wordWrap = true,
+                        padding = new RectOffset(0, 0, 0, 0),
+                        margin = new RectOffset(0, 0, 0, 0),
+                        stretchWidth = true,
+                        normal =
+                        {
+                            textColor = Color.black,
+                        }
+                    };
+                    Handles.DrawLine(prop.vectorValue, Vector3.zero);
+                    Handles.Label(prop.vectorValue, prop.displayName, style);
+                }
+            }
+
         }
     }
 
