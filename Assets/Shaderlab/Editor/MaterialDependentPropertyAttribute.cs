@@ -5,7 +5,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-public class DependentPropertyAttribute : ExtendedPropertyAttribute
+public class MaterialDependentPropertyAttribute : ExtendedMaterialPropertyAttribute
 {
     private readonly string propertyName;
     private readonly bool isTexture;
@@ -13,14 +13,14 @@ public class DependentPropertyAttribute : ExtendedPropertyAttribute
     private readonly CompareFunction compareFunction = CompareFunction.Disabled;
     private readonly float comperand;
 
-    public DependentPropertyAttribute(string textureName)
+    public MaterialDependentPropertyAttribute(string textureName)
     {
         propertyName = textureName;
         isTexture = true;
         compareFunction = CompareFunction.Equal;
     }
 
-    public DependentPropertyAttribute(string propertyName, string compareFunction, float comperand)
+    public MaterialDependentPropertyAttribute(string propertyName, string compareFunction, float comperand)
     {
         this.propertyName = propertyName;
         isTexture = false;

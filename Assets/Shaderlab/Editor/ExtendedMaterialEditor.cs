@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
 
-public class ExtendedMaterialEditor : MaterialEditor
+public partial class ExtendedMaterialEditor : MaterialEditor
 {
     private object lastTarget;
 
@@ -16,100 +16,52 @@ public class ExtendedMaterialEditor : MaterialEditor
 
     private MaterialProperty[] materialProperties;
 
-    private class MaterialPropertyInfo
-    {
-        public MaterialPropertyDrawer Drawer;
-        public List<MaterialPropertyDrawer> Decorators;
-        public ExtendedPropertyDrawer ExtendedDrawer;
-        public List<ExtendedPropertyAttribute> ExtendedAttributes;
-
-        public bool HasDrawer
-        {
-            get { return Drawer != null; }
-        }
-
-        public bool HasDecorators
-        {
-            get { return Decorators.Count > 0; }
-        }
-
-        public bool HasExtendedDrawer
-        {
-            get { return ExtendedDrawer != null; }
-        }
-
-        public bool HasExtendedAttributes
-        {
-            get { return ExtendedAttributes.Count > 0; }
-        }
-
-        public bool IsCustom
-        {
-            get { return HasDrawer || HasDecorators; }
-        }
-
-        public bool IsExtended
-        {
-            get { return HasExtendedDrawer || HasExtendedAttributes; }
-        }
-    }
 
     public override void OnInspectorGUI()
     {
         serializedObject.Update();
         if (serializedObject.isEditingMultipleObjects || target == null || isVisible == false)
         {
+            cachedMaterialPropertyInfos.Clear();
+            lastTarget = null;
+            materialProperties = null;
             return;
         }
         if (IsDifferentTarget())
         {
             cachedMaterialPropertyInfos.Clear();
             materialProperties = GetMaterialProperties(targets);
+            foreach (MaterialProperty prop in materialProperties)
+            {
+                cachedMaterialPropertyInfos[prop.name] = AcquirePropertyDrawers(prop);
+            }
+            foreach (MaterialProperty prop in materialProperties)
+            {
+                var cachedMaterialPropertyInfo = cachedMaterialPropertyInfos[prop.name];
+                cachedMaterialPropertyInfo.ExtendedApply(materialProperties, this);
+            }
         }
 
         SerializedProperty theShader = serializedObject.FindProperty("m_Shader");
         if (!theShader.hasMultipleDifferentValues && theShader.objectReferenceValue != null)
         {
-            SetDefaultGUIWidths();
+
             EditorGUI.BeginChangeCheck();
             foreach (MaterialProperty prop in materialProperties)
             {
-                if ((prop.flags &
-                     (MaterialProperty.PropFlags.HideInInspector | MaterialProperty.PropFlags.PerRendererData)) !=
-                    MaterialProperty.PropFlags.None)
+                MaterialPropertyInfo propertyInfo = cachedMaterialPropertyInfos[prop.name];
+                if (propertyInfo.IsHiddenInInspector)
                 {
                     continue;
                 }
 
-                if (IsDifferentTarget())
-                {
-                    cachedMaterialPropertyInfos[prop.name] = AcquirePropertyDrawers(prop);
-                }
-                MaterialPropertyInfo propertyInfo = cachedMaterialPropertyInfos[prop.name];
+                DrawDecorators(propertyInfo, prop);
 
-
-                float propertyHeight = GetTotalPropertyHeight(prop, propertyInfo);
-
-                Rect position = EditorGUILayout.GetControlRect(true, propertyHeight);
-
-                DrawDecorators(position, propertyInfo, prop);
-                if (propertyInfo.HasExtendedDrawer)
-                {
-                    float labelWidth = EditorGUIUtility.labelWidth;
-                    float fieldWidth = EditorGUIUtility.fieldWidth;
-                    propertyInfo.ExtendedDrawer.ExtendedOnGUI(position, prop, prop.displayName, this,
-                        propertyInfo.ExtendedAttributes, materialProperties);
-                    EditorGUIUtility.labelWidth = labelWidth;
-                    EditorGUIUtility.fieldWidth = fieldWidth;
-                }
-                else if (propertyInfo.HasDrawer)
-                {
-                    DrawDrawer(propertyInfo, position, prop);
-                }
-                else
-                {
-                    DefaultDraw(prop, propertyInfo.ExtendedAttributes, materialProperties);
-                }
+                float labelWidth = EditorGUIUtility.labelWidth;
+                float fieldWidth = EditorGUIUtility.fieldWidth;
+                propertyInfo.ExtendedMaterialDrawer.ExtendedOnGUI();
+                EditorGUIUtility.labelWidth = labelWidth;
+                EditorGUIUtility.fieldWidth = fieldWidth;
             }
 
             RenderQueueField();
@@ -124,191 +76,28 @@ public class ExtendedMaterialEditor : MaterialEditor
 
     void OnSceneGUI()
     {
-        if (Selection.activeGameObject && Selection.gameObjects.Length == 1)
+        if (!Selection.activeGameObject || Selection.gameObjects.Length != 1 ||
+            serializedObject.isEditingMultipleObjects || target == null || isVisible == false)
         {
-            var objectPosition = Selection.activeGameObject.transform.position;
-            Handles.matrix = Selection.activeTransform.localToWorldMatrix;
-            foreach (var prop in materialProperties ?? new MaterialProperty[0])
-            {
-                if (cachedMaterialPropertyInfos.ContainsKey(prop.name) == false)
-                {
-                    continue;
-                }
-                MaterialPropertyInfo propertyInfo = cachedMaterialPropertyInfos[prop.name];
+            return;
+        }
 
-                if (propertyInfo != null && propertyInfo.ExtendedDrawer is Vector3Drawer && DependantPropertyHelper.IsDisabled(propertyInfo.ExtendedAttributes, materialProperties) == false)
-                {
-                    prop.vectorValue = Handles.PositionHandle(prop.vectorValue, Quaternion.identity);
-
-                    var style = new GUIStyle(GUI.skin.box)
-                    {
-                        alignment = TextAnchor.MiddleCenter,
-                        fontStyle = FontStyle.Bold,
-                        wordWrap = true,
-                        padding = new RectOffset(0, 0, 0, 0),
-                        margin = new RectOffset(0, 0, 0, 0),
-                        stretchWidth = true,
-                        normal =
-                        {
-                            textColor = Color.black,
-                        }
-                    };
-                    Handles.DrawLine(prop.vectorValue, Vector3.zero);
-                    Handles.Label(prop.vectorValue, prop.displayName, style);
-                }
-            }
-
+        foreach (var materialPropertyInfo in cachedMaterialPropertyInfos)
+        {
+            materialPropertyInfo.Value.OnSceneGUI();
         }
     }
 
-    private void DefaultDraw(MaterialProperty prop, IEnumerable<ExtendedPropertyAttribute> attributes, IEnumerable<MaterialProperty> allProperties)
+    private void DrawDecorators(MaterialPropertyInfo propertyInfo, MaterialProperty prop)
     {
-        var label = new GUIContent(prop.displayName);
-        switch (prop.type)
+        foreach (var decorator in propertyInfo.ExtendedDecorators)
         {
-            case MaterialProperty.PropType.Color:
-                {
-                    DrawDefaultColor(prop, attributes, allProperties, label);
-                    break;
-                }
-            case MaterialProperty.PropType.Vector:
-                {
-                    Rect position = MaterialPropertyDrawerHelper.GetPropertyRect(this, prop, label.text, true);
-                    BackgroundColorAttribute backgroundColorAttribute = BackgroundColorAttributeHelper.GetBackgroundColorAttribute(attributes);
-                    backgroundColorAttribute.BeginBackgroundColor();
-                    using (new EditorGUI.DisabledScope(DependantPropertyHelper.IsDisabled(attributes, allProperties)))
-                    {
-                        EditorGUI.BeginChangeCheck();
-                        EditorGUI.showMixedValue = prop.hasMixedValue;
-                        float labelWidth = EditorGUIUtility.labelWidth;
-                        EditorGUIUtility.labelWidth = 0.0f;
-                        Vector4 vector4 = EditorGUI.Vector4Field(position, label, prop.vectorValue);
-                        EditorGUIUtility.labelWidth = labelWidth;
-                        EditorGUI.showMixedValue = false;
-                        if (EditorGUI.EndChangeCheck())
-                        {
-                            prop.vectorValue = vector4;
-                        }
-                    }
-                    backgroundColorAttribute.EndBackgroundColor();
-                    break;
-                }
-
-            case MaterialProperty.PropType.Float:
-                {
-                    Rect position = MaterialPropertyDrawerHelper.GetPropertyRect(this, prop, label.text, true);
-                    BackgroundColorAttribute backgroundColorAttribute = BackgroundColorAttributeHelper.GetBackgroundColorAttribute(attributes);
-
-                    backgroundColorAttribute.BeginBackgroundColor();
-                    using (new EditorGUI.DisabledScope(DependantPropertyHelper.IsDisabled(attributes, allProperties)))
-                    {
-                        EditorGUI.BeginChangeCheck();
-                        EditorGUI.showMixedValue = prop.hasMixedValue;
-                        float num = EditorGUI.FloatField(position, label, prop.floatValue);
-                        EditorGUI.showMixedValue = false;
-                        if (EditorGUI.EndChangeCheck())
-                        {
-                            prop.floatValue = num;
-                        }
-                    }
-
-                    backgroundColorAttribute.EndBackgroundColor();
-
-                    break;
-                }
-            case MaterialProperty.PropType.Range:
-                {
-                    Rect position = MaterialPropertyDrawerHelper.GetPropertyRect(this, prop, label.text, true);
-                    BackgroundColorAttribute backgroundColorAttribute = BackgroundColorAttributeHelper.GetBackgroundColorAttribute(attributes);
-                    backgroundColorAttribute.BeginBackgroundColor();
-                    using (new EditorGUI.DisabledScope(DependantPropertyHelper.IsDisabled(attributes, allProperties)))
-                    {
-                        EditorGUI.BeginChangeCheck();
-                        EditorGUI.showMixedValue = prop.hasMixedValue;
-                        float labelWidth = EditorGUIUtility.labelWidth;
-                        EditorGUIUtility.labelWidth = 0.0f;
-                        float num = EditorGUI.Slider(position, label, prop.floatValue, prop.rangeLimits.x, prop.rangeLimits.y);
-                        EditorGUI.showMixedValue = false;
-                        EditorGUIUtility.labelWidth = labelWidth;
-                        if (EditorGUI.EndChangeCheck())
-                        {
-                            prop.floatValue = num;
-                        }
-                    }
-                    backgroundColorAttribute.EndBackgroundColor();
-                    break;
-                }
-            case MaterialProperty.PropType.Texture:
-                {
-                    BackgroundColorAttribute backgroundColorAttribute = BackgroundColorAttributeHelper.GetBackgroundColorAttribute(attributes);
-                    backgroundColorAttribute.BeginBackgroundColor();
-                    using (new EditorGUI.DisabledScope(DependantPropertyHelper.IsDisabled(attributes, allProperties)))
-                    {
-                        TextureProperty(prop, prop.displayName);
-                    }
-                    backgroundColorAttribute.EndBackgroundColor();
-                    break;
-                }
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
-    }
-
-    private void DrawDefaultColor(MaterialProperty prop, IEnumerable<ExtendedPropertyAttribute> attributes, IEnumerable<MaterialProperty> allProperties, GUIContent label)
-    {
-        Rect position = MaterialPropertyDrawerHelper.GetPropertyRect(this, prop, label.text, true);
-
-        attributes = attributes.EmptyIfNull();
-        allProperties = allProperties.EmptyIfNull();
-
-        BackgroundColorAttribute backgroundColorAttribute = BackgroundColorAttributeHelper.GetBackgroundColorAttribute(attributes);
-        if (backgroundColorAttribute != null)
-        {
-            backgroundColorAttribute.BeginBackgroundColor();
-        }
-        using (new EditorGUI.DisabledScope(DependantPropertyHelper.IsDisabled(attributes, allProperties)))
-        {
-            EditorGUI.BeginChangeCheck();
-            EditorGUI.showMixedValue = prop.hasMixedValue;
-            bool hdr = (prop.flags & MaterialProperty.PropFlags.HDR) != MaterialProperty.PropFlags.None;
-            Color color = EditorGUI.ColorField(position, label, prop.colorValue, true, true, hdr, null);
-            EditorGUI.showMixedValue = false;
-            if (EditorGUI.EndChangeCheck())
-            {
-                prop.colorValue = color;
-            }
-        }
-        if (backgroundColorAttribute != null)
-        {
-            backgroundColorAttribute.EndBackgroundColor();
-        }
-    }
-
-    private void DrawDrawer(MaterialPropertyInfo propertyInfo, Rect position, MaterialProperty prop)
-    {
-        float labelWidth = EditorGUIUtility.labelWidth;
-        float fieldWidth = EditorGUIUtility.fieldWidth;
-        propertyInfo.Drawer.OnGUI(position, prop, new GUIContent(prop.displayName), this);
-        EditorGUIUtility.labelWidth = labelWidth;
-        EditorGUIUtility.fieldWidth = fieldWidth;
-    }
-
-    private void DrawDecorators(Rect position, MaterialPropertyInfo propertyInfo, MaterialProperty prop)
-    {
-        float height = position.height;
-        position.height = 0.0f;
-        foreach (MaterialPropertyDrawer decoratorDrawer in propertyInfo.Decorators)
-        {
-            position.height = decoratorDrawer.GetPropertyHeight(prop, prop.displayName, this);
             float labelWidth = EditorGUIUtility.labelWidth;
             float fieldWidth = EditorGUIUtility.fieldWidth;
-            decoratorDrawer.OnGUI(position, prop, new GUIContent(prop.displayName), this);
+            decorator.ExtendedOnGUI();
             EditorGUIUtility.labelWidth = labelWidth;
             EditorGUIUtility.fieldWidth = fieldWidth;
-            position.y += position.height;
-            height -= position.height;
         }
-        position.height = height;
     }
 
     private bool IsDifferentTarget()
@@ -320,60 +109,82 @@ public class ExtendedMaterialEditor : MaterialEditor
     private float GetTotalPropertyHeight(MaterialProperty prop, MaterialPropertyInfo materialPropertyInfo)
     {
         float propertyHeight =
-            materialPropertyInfo.Decorators.Sum(
-                decoratorDrawer => decoratorDrawer.GetPropertyHeight(prop, prop.displayName, this));
+            materialPropertyInfo.ExtendedDecorators.Sum(
+                decoratorDrawer => decoratorDrawer.GetPropertyHeight());
 
-        if (materialPropertyInfo.HasDrawer)
-        {
-            propertyHeight += materialPropertyInfo.Drawer.GetPropertyHeight(prop, prop.displayName, this);
-        }
+        propertyHeight += materialPropertyInfo.ExtendedMaterialDrawer.GetPropertyHeight();
         return propertyHeight;
     }
 
     private MaterialPropertyInfo AcquirePropertyDrawers(MaterialProperty prop)
     {
-        var info = new MaterialPropertyInfo
-        {
-            Drawer = null,
-            Decorators = new List<MaterialPropertyDrawer>(),
-            ExtendedDrawer = null,
-            ExtendedAttributes = new List<ExtendedPropertyAttribute>()
-        };
+        var info = new MaterialPropertyInfo(prop);
         string[] attributes = typeof(ShaderUtil).FindMethod("GetShaderPropertyAttributes",
                 BindingFlags.NonPublic | BindingFlags.Static, typeof(Shader), typeof(string))
             .InvokeMethod<string[]>(null, ((Material)target).shader, prop.name);
         attributes = attributes ?? new string[0];
 
-
-        foreach (string attribute in attributes)
+        if (attributes.Length > 0)
         {
-            var propertyDrawer = GetShaderPropertyDrawer(attribute);
-            if (propertyDrawer != null)
+            foreach (string attribute in attributes)
             {
-                if (propertyDrawer.GetType().IsSubclassOf(typeof(ExtendedPropertyDrawer)))
+                var propertyDrawer = GetShaderPropertyDrawer(attribute);
+                if (propertyDrawer != null)
                 {
-                    info.ExtendedDrawer = (ExtendedPropertyDrawer)propertyDrawer;
+                    if (propertyDrawer.GetType().IsSubclassOf(typeof(ExtendedMaterialPropertyDrawer)))
+                    {
+                        info.ExtendedMaterialDrawer = (ExtendedMaterialPropertyDrawer)propertyDrawer;
+                    }
+                    else if (propertyDrawer.GetType().IsSubclassOf(typeof(ExtendedMaterialPropertyAttribute)))
+                    {
+                        info.ExtendedAttributes.Add((ExtendedMaterialPropertyAttribute)propertyDrawer);
+                    }
+                    else if (propertyDrawer.GetType().IsSubclassOf(typeof(ExtendedMaterialPropertyGizmo)))
+                    {
+                        info.ExtendedGizmos.Add((ExtendedMaterialPropertyGizmo)propertyDrawer);
+                    }
+                    else if (propertyDrawer.GetType().IsSubclassOf(typeof(ExtendedMaterialPropertyDecorator)))
+                    {
+                        info.ExtendedDecorators.Add((ExtendedMaterialPropertyDecorator)propertyDrawer);
+                    }
+                    else
+                    {
+                        Debug.LogError("Failed to create ");
+                    }
                 }
-                else if (propertyDrawer.GetType().IsSubclassOf(typeof(ExtendedPropertyAttribute)))
-                {
-                    info.ExtendedAttributes.Add((ExtendedPropertyAttribute)propertyDrawer);
-                }
-                else if (propertyDrawer.GetType().Name.EndsWith("Decorator"))
-                {
-                    info.Decorators.Add(propertyDrawer);
-                }
-                else
-                {
-                    info.Drawer = propertyDrawer;
-                }
-                propertyDrawer.Apply(prop);
             }
         }
+        if (info.ExtendedMaterialDrawer == null)
+        {
+            ExtendedMaterialPropertyDrawer drawer;
+            switch (prop.type)
+            {
+                case MaterialProperty.PropType.Color:
+                    drawer = (ExtendedMaterialPropertyDrawer)CreateInstance(typeof(MaterialColorDrawer), string.Empty);
+                    break;
+                case MaterialProperty.PropType.Vector:
+                    drawer = (ExtendedMaterialPropertyDrawer)CreateInstance(typeof(MaterialVectorDrawer), string.Empty);
+                    break;
+                case MaterialProperty.PropType.Float:
+                    drawer = (ExtendedMaterialPropertyDrawer)CreateInstance(typeof(MaterialFloatDrawer), string.Empty);
+                    break;
+                case MaterialProperty.PropType.Range:
+                    drawer = (ExtendedMaterialPropertyDrawer)CreateInstance(typeof(MaterialRangeDrawer), string.Empty);
+                    break;
+                case MaterialProperty.PropType.Texture:
+                    drawer = (ExtendedMaterialPropertyDrawer)CreateInstance(typeof(MaterialTextureDrawer), string.Empty);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+            info.ExtendedMaterialDrawer = drawer;
+        }
+
 
         return info;
     }
 
-    private static MaterialPropertyDrawer GetShaderPropertyDrawer(string attrib)
+    private static object GetShaderPropertyDrawer(string attrib)
     {
         string str = attrib;
         string argsText = string.Empty;
@@ -385,31 +196,33 @@ public class ExtendedMaterialEditor : MaterialEditor
         }
         var materialPropertyDrawers =
             AppDomain.CurrentDomain.GetAssemblies()
-                .Select(a => a.GetTypes().Where(t => t.IsSubclassOf(typeof(MaterialPropertyDrawer)))).SelectMany(c => c);
+                .Select(a => a.GetTypes().Where(t => t.IsSubclassOf(typeof(ExtendedMaterialPropertyAspect)))).SelectMany(c => c);
         foreach (Type type in materialPropertyDrawers)
         {
             if (type.Name == str || type.Name == str + "Drawer" || type.Name == "Material" + str + "Drawer" ||
                 type.Name == str + "Decorator" || type.Name == "Material" + str + "Decorator" ||
+                type.Name == str + "Gizmo" || type.Name == "Material" + str + "Gizmo" ||
                 type.Name == str + "Attribute" || type.Name == "Material" + str + "Attribute")
             {
                 try
                 {
-                    return CreatePropertyDrawer(type, argsText);
+                    return CreateInstance(type, argsText);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    Debug.LogWarningFormat("Failed to create material drawer {0} with arguments '{1}'", str, argsText);
+                    Debug.LogErrorFormat("Failed to create type: {0} with arguments '{1}'. Expection Message: {2}", type, argsText, ex.Message);
                     return null;
                 }
             }
         }
+
         return null;
     }
 
-    private static MaterialPropertyDrawer CreatePropertyDrawer(Type type, string argsText)
+    private static object CreateInstance(Type type, string argsText)
     {
         if (string.IsNullOrEmpty(argsText))
-            return Activator.CreateInstance(type) as MaterialPropertyDrawer;
+            return Activator.CreateInstance(type);
         string[] strArray = argsText.Split(',');
         object[] objArray = new object[strArray.Length];
         for (int index = 0; index < strArray.Length; ++index)
@@ -421,6 +234,6 @@ public class ExtendedMaterialEditor : MaterialEditor
                     ? s
                     : (object)result;
         }
-        return Activator.CreateInstance(type, objArray) as MaterialPropertyDrawer;
+        return Activator.CreateInstance(type, objArray);
     }
 }

@@ -9,7 +9,9 @@
 
 		_Glossiness("Smoothness", Range(0.0, 1.0)) = 0.5
 		_GlossMapScale("Smoothness Scale", Range(0.0, 1.0)) = 1.0
-		[Enum(Metallic Alpha,0,Albedo Alpha,1)] _SmoothnessTextureChannel ("Smoothness texture channel", Float) = 0
+		[Enum(Metallic Alpha,0,Albedo Alpha,1)] 
+		[BackgroundColor(0,1,0.5,1)]
+		_SmoothnessTextureChannel ("Smoothness texture channel", Float) = 0
 
 		[Gamma] _Metallic("Metallic", Range(0.0, 1.0)) = 0.0
 		_MetallicGlossMap("Metallic", 2D) = "white" {}
@@ -37,27 +39,33 @@
 
 		[Enum(UV0,0,UV1,1)] _UVSec ("UV Set for secondary textures", Float) = 0
 		// Extra properties
-		[Space(50)]
+		[Space(200)]
 		[Header(More stuff)]
 		[DependentProperty(_BumpMap2)]
 		_TestRange("Test Range", Range(0,1)) = 0.5
+		[PowerSlider(3.0)]
+		_TestRange2("Test Power Range", Range(0,1)) = 0.5
 		[DependentProperty(_TestRange,Equal,1)]
 		_TestVector("TEst VEctor", Vector) = (1,0,0,1)
 		[BackgroundColor(0,1,0.5,1)]
 		[DependentProperty(_BumpMap2)]
 		_TestVectorAlt1("TEst VEctor", Vector) = (1,0,0,1)
+		[IntRange]
 		_TestVectorAlt2("TEst VEctor", Vector) = (1,0,0,1)
 		[Vector3(1)]
 		[BackgroundColor(0,0.5,0.5,1)]
-		_TestVector3("TEst VEctor3", Vector) = (1,0,0,1)
+		[Position(Local)]
+		_TestVector3("Position Local", Vector) = (1,0,0,1)
+		[Vector3(1)]
+		[Position(World)]
+		_TestVector3_2("Position World", Vector) = (1,0,0,1)
 		[BackgroundColor(0,1,0,1)]
 		[Vector2(0, 1)]
 		_TestVector2("TEst VEctor2", Vector) = (1,0,0,1)
-		[PowerSlider(3.0)]
 		_BumpScale2("Scale2", Float) = 1.0
 		_BumpMap2("Normal Map2", 2D) = "bump" {}
 
-		_Parallax2 ("Height Scale2", Range (0.005, 0.08)) = 0.02
+		_Parallax2 ("Height Scale2 with rally long name", Range (0.005, 0.08)) = 0.02
 		[DependentProperty(_Parallax2,GreaterEqual,0.03)]
 		_ParallaxMap2 ("Height Map2", 2D) = "black" {}
 		[Vector3(1)]
@@ -72,10 +80,9 @@
 		[BackgroundColor(0,0,1,1)]
 		_EmissionColor3("Color3", Color) = (0,0,0)
 		_EmissionMap2("Emission2", 2D) = "white" {}
-		
 		_DetailMask2("Detail Mask 2", 2D) = "white" {}
-
 		_DetailAlbedoMap2("Detail Albedo x2 2", 2D) = "grey" {}
+		[BackgroundColor(0,0,1,1)]
 		_DetailNormalMapScale2("Scale2", Float) = 1.0
 		_DetailNormalMap2("Normal Map2", 2D) = "bump" {}
 

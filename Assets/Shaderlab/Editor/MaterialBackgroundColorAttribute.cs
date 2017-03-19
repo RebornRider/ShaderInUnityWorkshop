@@ -1,25 +1,25 @@
 using UnityEngine;
 
-public class BackgroundColorAttribute : ExtendedPropertyAttribute
+public class MaterialBackgroundColorAttribute : ExtendedMaterialPropertyAttribute
 {
     private readonly Color color = Color.magenta;
     private Color originalBackgroundColor;
     private static readonly NullObjectImpl nullObject = new NullObjectImpl();
-    public static BackgroundColorAttribute NullObject
+    public static MaterialBackgroundColorAttribute NullObject
     {
         get { return nullObject; }
     }
 
-    private BackgroundColorAttribute()
+    private MaterialBackgroundColorAttribute()
     {
     }
 
-    public BackgroundColorAttribute(float r, float g, float b, float a)
+    public MaterialBackgroundColorAttribute(float r, float g, float b, float a)
     {
         color = new Color(r, g, b, a);
     }
 
-    public BackgroundColorAttribute(string colorHTML)
+    public MaterialBackgroundColorAttribute(string colorHTML)
     {
         Color parsedColor;
         if (ColorUtility.TryParseHtmlString(colorHTML, out parsedColor))
@@ -39,7 +39,7 @@ public class BackgroundColorAttribute : ExtendedPropertyAttribute
         GUI.backgroundColor = originalBackgroundColor;
     }
 
-    private sealed class NullObjectImpl : BackgroundColorAttribute
+    private sealed class NullObjectImpl : MaterialBackgroundColorAttribute
     {
         public override void BeginBackgroundColor()
         {

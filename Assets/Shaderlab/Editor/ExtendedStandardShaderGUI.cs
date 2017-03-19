@@ -32,7 +32,6 @@ public class ExtendedStandardShaderGUI : ShaderGUI
 
         EditorGUI.BeginChangeCheck();
         standardShaderGui.OnGUI(materialEditor, properties);
-
         EditorGUILayout.Space();
         GUILayout.Label("Custom Properties", EditorStyles.boldLabel);
         materialEditor.SetDefaultGUIWidths();

@@ -10,7 +10,7 @@
  
 		_MyInt ("My integer", Int) = 2
 		_MyFloat ("My float", Float) = 1.5
-		_MyRange ("My range", Range(0.0, 1.0)) = 0.5
+		_MyRange ("My long float yeah range", Range(0.0, 1.0)) = 0.5
  
 		_MyColor ("My colour", Color) = (1, 0, 0, 1)	// (R, G, B, A)
 		_MyVector ("My Vector4", Vector) = (0, 0, 0, 0)	// (x, y, z, w)
