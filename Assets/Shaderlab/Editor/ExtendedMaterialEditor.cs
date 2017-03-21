@@ -16,68 +16,87 @@ public partial class ExtendedMaterialEditor : MaterialEditor
 
     private MaterialProperty[] materialProperties;
 
-
     public override void OnInspectorGUI()
     {
         serializedObject.Update();
-        if (serializedObject.isEditingMultipleObjects || target == null || isVisible == false)
+
+        if (IsValidTarget == false)
         {
-            cachedMaterialPropertyInfos.Clear();
-            lastTarget = null;
-            materialProperties = null;
+            ResetMaterial();
             return;
         }
+
         if (IsDifferentTarget())
         {
-            cachedMaterialPropertyInfos.Clear();
-            materialProperties = GetMaterialProperties(targets);
-            foreach (MaterialProperty prop in materialProperties)
-            {
-                cachedMaterialPropertyInfos[prop.name] = AcquirePropertyDrawers(prop);
-            }
-            foreach (MaterialProperty prop in materialProperties)
-            {
-                var cachedMaterialPropertyInfo = cachedMaterialPropertyInfos[prop.name];
-                cachedMaterialPropertyInfo.ExtendedApply(materialProperties, this);
-            }
+            ApplyMaterial();
         }
 
-        SerializedProperty theShader = serializedObject.FindProperty("m_Shader");
-        if (!theShader.hasMultipleDifferentValues && theShader.objectReferenceValue != null)
+        EditorGUI.BeginChangeCheck();
+        Draw();
+        if (EditorGUI.EndChangeCheck())
         {
+            PropertiesChanged();
+        }
 
-            EditorGUI.BeginChangeCheck();
-            foreach (MaterialProperty prop in materialProperties)
-            {
-                MaterialPropertyInfo propertyInfo = cachedMaterialPropertyInfos[prop.name];
-                if (propertyInfo.IsHiddenInInspector)
-                {
-                    continue;
-                }
+        lastTarget = target;
+    }
 
-                DrawDecorators(propertyInfo, prop);
+    private void ResetMaterial()
+    {
+        cachedMaterialPropertyInfos.Clear();
+        lastTarget = null;
+        materialProperties = null;
+    }
 
-                float labelWidth = EditorGUIUtility.labelWidth;
-                float fieldWidth = EditorGUIUtility.fieldWidth;
-                propertyInfo.ExtendedMaterialDrawer.ExtendedOnGUI();
-                EditorGUIUtility.labelWidth = labelWidth;
-                EditorGUIUtility.fieldWidth = fieldWidth;
-            }
+    private void ApplyMaterial()
+    {
+        cachedMaterialPropertyInfos.Clear();
+        materialProperties = GetMaterialProperties(targets);
+        foreach (MaterialProperty prop in materialProperties)
+        {
+            cachedMaterialPropertyInfos[prop.name] = AcquirePropertyDrawers(prop);
+        }
+        foreach (MaterialProperty prop in materialProperties)
+        {
+            var cachedMaterialPropertyInfo = cachedMaterialPropertyInfos[prop.name];
+            cachedMaterialPropertyInfo.ExtendedApply(materialProperties, this);
+        }
+    }
 
-            RenderQueueField();
-            if (EditorGUI.EndChangeCheck())
-            {
-                PropertiesChanged();
-            }
+    private void Draw()
+    {
+        foreach (
+            MaterialPropertyInfo propertyInfo in
+            materialProperties.Select(prop => cachedMaterialPropertyInfos[prop.name])
+                .Where((info => info.IsHiddenInInspector == false)))
+        {
+            DrawDecorators(propertyInfo);
+            DrawDrawer(propertyInfo);
+        }
+        RenderQueueField();
+    }
 
-            lastTarget = target;
+    private static void DrawDrawer(MaterialPropertyInfo propertyInfo)
+    {
+        float labelWidth = EditorGUIUtility.labelWidth;
+        float fieldWidth = EditorGUIUtility.fieldWidth;
+        propertyInfo.ExtendedMaterialDrawer.ExtendedOnGUI();
+        EditorGUIUtility.labelWidth = labelWidth;
+        EditorGUIUtility.fieldWidth = fieldWidth;
+    }
+
+    private bool IsValidTarget
+    {
+        get
+        {
+            return !(target == null || isVisible == false || serializedObject.isEditingMultipleObjects && serializedObject.targetObjects.Any(t => t is Material == false || ((Material)t).shader != ((Material)serializedObject.targetObject).shader));
         }
     }
 
     void OnSceneGUI()
     {
-        if (!Selection.activeGameObject || Selection.gameObjects.Length != 1 ||
-            serializedObject.isEditingMultipleObjects || target == null || isVisible == false)
+        if (Selection.activeGameObject == null || Selection.gameObjects.Length != 1 ||
+            IsValidTarget == false)
         {
             return;
         }
@@ -88,7 +107,7 @@ public partial class ExtendedMaterialEditor : MaterialEditor
         }
     }
 
-    private void DrawDecorators(MaterialPropertyInfo propertyInfo, MaterialProperty prop)
+    private void DrawDecorators(MaterialPropertyInfo propertyInfo)
     {
         foreach (var decorator in propertyInfo.ExtendedDecorators)
         {
@@ -154,6 +173,7 @@ public partial class ExtendedMaterialEditor : MaterialEditor
                 }
             }
         }
+
         if (info.ExtendedMaterialDrawer == null)
         {
             ExtendedMaterialPropertyDrawer drawer;
@@ -177,6 +197,7 @@ public partial class ExtendedMaterialEditor : MaterialEditor
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+
             info.ExtendedMaterialDrawer = drawer;
         }
 
@@ -200,9 +221,9 @@ public partial class ExtendedMaterialEditor : MaterialEditor
         foreach (Type type in materialPropertyDrawers)
         {
             if (type.Name == str || type.Name == str + "Drawer" || type.Name == "Material" + str + "Drawer" ||
-                type.Name == str + "Decorator" || type.Name == "Material" + str + "Decorator" ||
-                type.Name == str + "Gizmo" || type.Name == "Material" + str + "Gizmo" ||
-                type.Name == str + "Attribute" || type.Name == "Material" + str + "Attribute")
+                type.Name == str + "Decorator" || type.Name == "Material" + str || type.Name == "Material" + str + "Decorator" ||
+                type.Name == str + "Gizmo" || type.Name == "Material" + str || type.Name == "Material" + str + "Gizmo" ||
+                type.Name == str + "Attribute" || type.Name == "Material" + str || type.Name == "Material" + str + "Attribute")
             {
                 try
                 {

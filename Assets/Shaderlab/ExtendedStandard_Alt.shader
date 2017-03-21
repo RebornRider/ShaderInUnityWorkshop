@@ -20,6 +20,7 @@
 		[ToggleOff] _GlossyReflections("Glossy Reflections", Float) = 1.0
 
 		_BumpScale("Scale", Float) = 1.0
+		[Normal]
 		_BumpMap("Normal Map", 2D) = "bump" {}
 
 		_Parallax ("Height Scale", Range (0.005, 0.08)) = 0.02
@@ -81,6 +82,7 @@
 		_EmissionColor3("Color3", Color) = (0,0,0)
 		_EmissionMap2("Emission2", 2D) = "white" {}
 		_DetailMask2("Detail Mask 2", 2D) = "white" {}
+		[DependentProperty(_DetailMask2)]
 		_DetailAlbedoMap2("Detail Albedo x2 2", 2D) = "grey" {}
 		[BackgroundColor(0,0,1,1)]
 		_DetailNormalMapScale2("Scale2", Float) = 1.0

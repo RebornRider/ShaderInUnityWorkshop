@@ -49,7 +49,7 @@ public static class ReflectionUtil
 
     public static Type GetUnityEditorType(string className)
     {
-        return AppDomain.CurrentDomain.GetAssemblies().Single(a => a.FullName == "UnityEditor").GetType("UnityEditor." + className);
+        return AppDomain.CurrentDomain.GetAssemblies().Single(a => a.GetName().Name == "UnityEditor").GetType("UnityEditor." + className);
     }
 
     public static void InvokeMethod(this MethodInfo method, object obj, params object[] parameters)
