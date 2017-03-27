@@ -53,6 +53,8 @@
 		_TestVectorAlt1("TEst VEctor", Vector) = (1,0,0,1)
 		[IntRange]
 		_TestVectorAlt2("TEst VEctor", Vector) = (1,0,0,1)
+		[Packed(First,Emission,Third,Aba)]
+		_TestVectorAlt3("TEst Packed Data", Vector) = (1,0,0,1)
 		[Vector3(1)]
 		[BackgroundColor(0,0.5,0.5,1)]
 		[Position(Local)]

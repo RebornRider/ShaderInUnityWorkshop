@@ -93,7 +93,7 @@ internal class MaterialTextureDrawer : ExtendedMaterialPropertyDrawer
         }
     }
 
-    protected object textureValidatorDelegate;
+    protected readonly object textureValidatorDelegate;
 
     public MaterialTextureDrawer()
     {
