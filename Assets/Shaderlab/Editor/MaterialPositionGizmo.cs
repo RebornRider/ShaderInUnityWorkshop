@@ -66,7 +66,12 @@ public class MaterialPositionGizmo : ExtendedMaterialPropertyGizmo
                     }
         };
         Handles.Label(Prop.vectorValue, Prop.displayName, style);
-        Prop.vectorValue = Handles.PositionHandle(Prop.vectorValue, Quaternion.identity);
+        Vector3 resultVector = Handles.PositionHandle(Prop.vectorValue, Quaternion.identity);
+        if (resultVector != (Vector3)Prop.vectorValue)
+        {
+            Editor.Repaint();
+        }
+        Prop.vectorValue = resultVector;
         Handles.matrix = matrix;
     }
 

@@ -17,7 +17,7 @@
 			
 			float4 vert (float4 position : POSITION) : SV_POSITION
 			{
-				return mul(UNITY_MATRIX_MVP, position);
+				return UnityObjectToClipPos(position);
 			}
 			
 			fixed4 frag () : SV_Target

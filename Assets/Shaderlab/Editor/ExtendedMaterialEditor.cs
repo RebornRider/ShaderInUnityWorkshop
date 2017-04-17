@@ -101,9 +101,9 @@ public partial class ExtendedMaterialEditor : MaterialEditor
             return;
         }
 
-        foreach (var materialPropertyInfo in cachedMaterialPropertyInfos)
+        foreach (var materialPropertyInfo in cachedMaterialPropertyInfos.Values)
         {
-            materialPropertyInfo.Value.OnSceneGUI();
+            materialPropertyInfo.OnSceneGUI();
         }
     }
 

@@ -1,16 +1,14 @@
-
-
 /*============================================================================
 
 source taken from
 
 
-                    NVIDIA FXAA 3.11 by TIMOTHY LOTTES
+					NVIDIA FXAA 3.11 by TIMOTHY LOTTES
 
-                                        
+										
 and adapted and ported to Unity by Unity Technologies
 
-                    
+					
 ------------------------------------------------------------------------------                       
 COPYRIGHT (C) 2010, 2011 NVIDIA CORPORATION. ALL RIGHTS RESERVED.
 ------------------------------------------------------------------------------                       
@@ -64,7 +62,7 @@ Shader "Hidden/FXAA III (Console)" {
 		v2f vert (appdata_img v)
 		{
 			v2f o;
-			o.pos = mul (UNITY_MATRIX_MVP, v.vertex);
+			o.pos = UnityObjectToClipPos (v.vertex);
 			
 			o.uv = v.texcoord.xy;
 			
