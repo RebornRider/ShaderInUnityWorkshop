@@ -7,10 +7,8 @@
 		_NormalMap ("Normalmap", 2D) = "bump" {}
 	}
 
-	CGINCLUDE // common code for all passes of all subshaders
-		// for UnityObjectToWorldNormal and UnityWorldSpaceLightDir
+	CGINCLUDE 
 		#include "UnityCG.cginc" 
-		// for _LightColor0
 		#include "UnityLightingCommon.cginc"
 
 		struct vertexInput {
@@ -45,9 +43,6 @@
 
 		Pass
 		{
-			// indicate that our pass is the "base" pass in forward rendering pipeline. 
-			// It gets ambient and main directional light data set up; 
-			// light direction in _WorldSpaceLightPos0 and color in _LightColor0
 			Tags {"LightMode"="ForwardBase"}
 		
 			CGPROGRAM
@@ -86,24 +81,18 @@
 			fixed3 fragBasePass (vertexOutput i) : SV_Target
 			{
 				half3 worldNormal = decodeNormal(i.tspace0, i.tspace1, i.tspace2, TRANSFORM_TEX(i.uv, _NormalMap));
-				// dot product between normal and light direction for lambert lighting
 				half NdotL = saturate(dot(worldNormal, UnityWorldSpaceLightDir(i.modelPos)));
-				// factor in the light color and ambience
 				fixed3 lightCol = saturate((NdotL * _LightColor0) + ShadeSH9(half4(worldNormal,1)));
-
 				fixed3 diffuseColor = tex2D(_MainTex, TRANSFORM_TEX(i.uv, _MainTex));
 				return diffuseColor * lightCol;
 			}			
 			ENDCG
 		}
 
-		//the second pass for additional lights
 		Pass
 		{
 			Tags { "LightMode" = "ForwardAdd" } 
-			// Set the Blend Mode to One One - additive blending
 			Blend One One 
-			// no need to write to z buffer twice
 			ZWrite Off
 			
 			CGPROGRAM
@@ -149,17 +138,11 @@
 		
 			fixed3 fragAddPass (vertexOutput i) : SV_Target
 			{
+				// calculate world normal form normal map
 				half3 worldNormal = decodeNormal(i.tspace0, i.tspace1, i.tspace2, TRANSFORM_TEX(i.uv, _NormalMap));
-				half3 vertexToLightSource = UnityWorldSpaceLightDir(i.worldPos);
-				// linear falloff for point lights , no falloff for directional lights
-				float distance = length(vertexToLightSource);	
-				half attenuation = LIGHT_ATTENUATION(i);
-				// dot product between normal and light direction for lambert lighting
-				half NdotL = saturate(dot(worldNormal, normalize(vertexToLightSource)));
-				// we multiply with attenuation to create falloff
-				// we can skip the saturate, since we do not add ambient in this pass
+				half NdotL = saturate(dot(worldNormal, normalize(UnityWorldSpaceLightDir(i.worldPos))));
+				UNITY_LIGHT_ATTENUATION(attenuation, i, i.worldPos)
 				fixed3 lightCol = _LightColor0.xyz * NdotL * attenuation;
-
 				fixed3 diffuseColor = tex2D(_MainTex, TRANSFORM_TEX(i.uv, _MainTex));
 				return diffuseColor * lightCol;
 			}			

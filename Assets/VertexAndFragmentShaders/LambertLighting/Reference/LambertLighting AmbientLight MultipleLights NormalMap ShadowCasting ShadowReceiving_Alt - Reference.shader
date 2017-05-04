@@ -1,4 +1,4 @@
-﻿Shader "ShadersInUnityWorkshop/Reference/VertexAndFragmentShaders/LambertLighting/LambertLighting AmbientLight MultipleLights NormalMap ShadowCasting ShadowReceiving FullShadows Fog - Reference"
+﻿Shader "ShadersInUnityWorkshop/Reference/VertexAndFragmentShaders/LambertLighting/LambertLighting AmbientLight MultipleLights NormalMap ShadowCasting ShadowReceiving_Alt - Reference"
 {
 	Properties
 	{
@@ -9,7 +9,6 @@
 
 	CGINCLUDE 
 		#pragma vertex vert
-		#pragma multi_compile_fog		
 
 		#include "UnityCG.cginc" 
 		#include "UnityLightingCommon.cginc"
@@ -29,8 +28,7 @@
 			half3 tspace2 : TEXCOORD3; 
 			float2 uv : TEXCOORD4;	
 			float4 pos : SV_POSITION;
-			LIGHTING_COORDS(5,6) 
-			UNITY_FOG_COORDS(7)				
+			LIGHTING_COORDS(5,6) 				
 		};
 
 		vertexOutput vert(vertexInput v)
@@ -40,7 +38,7 @@
 			o.pos = UnityObjectToClipPos(v.vertex);
 			o.uv = v.uv;	
 			TRANSFER_VERTEX_TO_FRAGMENT(o); 
-			UNITY_TRANSFER_FOG(o,o.pos);
+
 			half3 wNormal = UnityObjectToWorldNormal(v.normal);
 			half3 wTangent = UnityObjectToWorldDir(v.tangent.xyz);
 			half tangentSign = v.tangent.w * unity_WorldTransformParams.w;
@@ -59,7 +57,9 @@
 
 		half3 decodeNormal(half3 tspace0, half3 tspace1, half3 tspace2, float2 uv)
 		{
+			// sample the normal map, and decode from the Unity encoding
 			half3 tnormal = UnpackNormal(tex2D(_NormalMap, uv));
+			// transform normal from tangent to world space
 			half3 worldNormal;
 			worldNormal.x = dot(tspace0, tnormal);
 			worldNormal.y = dot(tspace1, tnormal);
@@ -88,9 +88,7 @@
 				fixed3 lightCol = saturate(NdotL * _LightColor0 + ShadeSH9(half4(worldNormal,1)));				
 				fixed3 diffuseColor = tex2D(_MainTex, TRANSFORM_TEX(i.uv, _MainTex));				
 				UNITY_LIGHT_ATTENUATION(attenuation, i, i.worldPos)
-				fixed3 finalColor = diffuseColor * lightCol * attenuation;
-				UNITY_APPLY_FOG(i.fogCoord, finalColor);
-				return finalColor;
+				return diffuseColor * lightCol * attenuation;
 			}
 			ENDCG
 		}
@@ -104,7 +102,7 @@
 			CGPROGRAM
 			#pragma fragment fragAddPass		
 
-			#pragma multi_compile_fwdadd_fullshadows
+			#pragma multi_compile_fwdadd
 			
 			fixed3 fragAddPass (vertexOutput i) : SV_Target
 			{
@@ -113,13 +111,11 @@
 				UNITY_LIGHT_ATTENUATION(attenuation, i, i.worldPos)
 				fixed3 lightCol = _LightColor0.xyz * NdotL * attenuation;
 				fixed3 diffuseColor = tex2D(_MainTex, TRANSFORM_TEX(i.uv, _MainTex));
-				fixed3 finalColor = diffuseColor * lightCol;
-				UNITY_APPLY_FOG(i.fogCoord, finalColor);
-				return finalColor;
+				return diffuseColor * lightCol;
 			}	
 			ENDCG	
 		}
-
+		
 		UsePass "Legacy Shaders/VertexLit/SHADOWCASTER"
 
 	}

@@ -11,18 +11,15 @@
 
 		Pass
 		{
-			// indicate that our pass is the "base" pass in forward rendering pipeline. 
-			// It gets ambient and main directional light data set up; 
-			// light direction in _WorldSpaceLightPos0 and color in _LightColor0
 			Tags {"LightMode"="ForwardBase"}
 		
 			CGPROGRAM
 			#pragma vertex vert
 			#pragma fragment frag
 
-			// for UnityObjectToWorldNormal and UnityWorldSpaceLightDir
+			#pragma multi_compile_fwdbase
+
 			#include "UnityCG.cginc" 
-			// for _LightColor0
 			#include "UnityLightingCommon.cginc"
 			
 			struct vertexInput {
@@ -43,11 +40,8 @@
 				vertexOutput o;
 				o.pos = UnityObjectToClipPos( v.vertex );
 				o.uv = v.uv;
-				// get vertex normal in world space
 				half3 worldNormal = UnityObjectToWorldNormal(v.normal);
-				// dot product between normal and light direction for lambert lighting
 				half nl = max(_MinAttenuation, dot(worldNormal,  UnityWorldSpaceLightDir(v.vertex)));
-				// factor in the light color
 				o.lightCol = nl * _LightColor0;
 				return o;
 			}
