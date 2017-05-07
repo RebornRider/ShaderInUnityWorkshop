@@ -8,9 +8,9 @@ internal class MaterialTextureDrawer : ExtendedMaterialPropertyDrawer
 {
     private TextureDimension desiredTexdim;
 
-    public override float GetPropertyHeight()
+    protected override float GetPropertyHeight()
     {
-        return GetTextureFieldHeight() + 6;
+        return IsPropertyTypeValid() ? GetTextureFieldHeight() + 6 : TypeWarningPropertyHeight;
     }
 
     protected static float GetTextureFieldHeight()
@@ -18,37 +18,36 @@ internal class MaterialTextureDrawer : ExtendedMaterialPropertyDrawer
         return 64;
     }
 
-    public override void ExtendedOnGUI()
+    private static readonly MaterialProperty.PropType[] validPropTypes = { MaterialProperty.PropType.Texture };
+    protected override MaterialProperty.PropType[] ValidPropTypes
     {
-        Rect scaleAndOffsetPosition = EditorGUILayout.GetControlRect(true, GetPropertyHeight(),
-            EditorStyles.layerMaskField);
-        MaterialBackgroundColorAttribute backgroundColorAttribute =
-            MaterialBackgroundColorAttributeHelper.GetBackgroundColorAttribute(ExtendedAttributes);
-        backgroundColorAttribute.BeginBackgroundColor();
-        using (
-            new EditorGUI.DisabledScope(
-                MaterialDependantPropertyHelper.IsDisabled(ExtendedAttributes, AllProperties)))
+        get
         {
-            BeginDefaultGUIWidth();
-
-            bool scaleOffset = (Prop.flags & MaterialProperty.PropFlags.NoScaleOffset) ==
-                               MaterialProperty.PropFlags.None;
-            EditorGUI.PrefixLabel(scaleAndOffsetPosition, LabelContent);
-            scaleAndOffsetPosition.height = GetTextureFieldHeight();
-            Rect texutreBodyPosition = scaleAndOffsetPosition;
-            texutreBodyPosition.xMin = texutreBodyPosition.xMax - EditorGUIUtility.fieldWidth;
-            TexturePropertyBody(texutreBodyPosition, Prop);
-            if (scaleOffset)
-            {
-                Editor.TextureScaleOffsetProperty(Editor.GetTexturePropertyCustomArea(scaleAndOffsetPosition), Prop);
-            }
-            GUILayout.Space(-6f);
-            Editor.TextureCompatibilityWarning(Prop);
-            GUILayout.Space(6f);
-
-            EndDefaultGUIWidth();
+            return validPropTypes;
         }
-        backgroundColorAttribute.EndBackgroundColor();
+    }
+
+
+    protected override void DrawProperty(Rect position)
+    {
+        BeginDefaultGUIWidth();
+
+        bool scaleOffset = (Prop.flags & MaterialProperty.PropFlags.NoScaleOffset) ==
+                           MaterialProperty.PropFlags.None;
+        EditorGUI.PrefixLabel(position, LabelContent);
+        position.height = GetTextureFieldHeight();
+        Rect texutreBodyPosition = position;
+        texutreBodyPosition.xMin = texutreBodyPosition.xMax - EditorGUIUtility.fieldWidth;
+        TexturePropertyBody(texutreBodyPosition, Prop);
+        if (scaleOffset)
+        {
+            Editor.TextureScaleOffsetProperty(Editor.GetTexturePropertyCustomArea(position), Prop);
+        }
+        GUILayout.Space(-6f);
+        Editor.TextureCompatibilityWarning(Prop);
+        GUILayout.Space(6f);
+
+        EndDefaultGUIWidth();
     }
 
     protected void TexturePropertyBody(Rect position, MaterialProperty prop)

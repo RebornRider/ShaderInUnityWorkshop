@@ -38,6 +38,14 @@ public partial class ExtendedMaterialEditor : MaterialEditor
             PropertiesChanged();
         }
 
+        if (Event.current.type == EventType.ContextClick)
+        {
+            MaterialPropertyInfo materialPropertyInfo = cachedMaterialPropertyInfos.Values
+                .SingleOrDefault(
+                    x => x.ExtendedMaterialDrawer.LastRect.Contains(Event.current.mousePosition));
+            Debug.Log("Conext click on " + (materialPropertyInfo != null ? materialPropertyInfo.Prop.displayName : "Nothing"));
+        }
+
         lastTarget = target;
     }
 
@@ -59,7 +67,7 @@ public partial class ExtendedMaterialEditor : MaterialEditor
         foreach (MaterialProperty prop in materialProperties)
         {
             var cachedMaterialPropertyInfo = cachedMaterialPropertyInfos[prop.name];
-            cachedMaterialPropertyInfo.ExtendedApply(materialProperties, this);
+            cachedMaterialPropertyInfo.Setup(materialProperties, this);
         }
     }
 
@@ -89,7 +97,9 @@ public partial class ExtendedMaterialEditor : MaterialEditor
     {
         get
         {
-            return !(target == null || isVisible == false || serializedObject.isEditingMultipleObjects && serializedObject.targetObjects.Any(t => t is Material == false || ((Material)t).shader != ((Material)serializedObject.targetObject).shader));
+            return !(target == null || isVisible == false || serializedObject.isEditingMultipleObjects &&
+                     serializedObject.targetObjects.Any(t => t is Material == false || ((Material)t).shader !=
+                                                             ((Material)serializedObject.targetObject).shader));
         }
     }
 
@@ -122,17 +132,6 @@ public partial class ExtendedMaterialEditor : MaterialEditor
     private bool IsDifferentTarget()
     {
         return !ReferenceEquals(target, lastTarget);
-    }
-
-
-    private float GetTotalPropertyHeight(MaterialProperty prop, MaterialPropertyInfo materialPropertyInfo)
-    {
-        float propertyHeight =
-            materialPropertyInfo.ExtendedDecorators.Sum(
-                decoratorDrawer => decoratorDrawer.GetPropertyHeight());
-
-        propertyHeight += materialPropertyInfo.ExtendedMaterialDrawer.GetPropertyHeight();
-        return propertyHeight;
     }
 
     private MaterialPropertyInfo AcquirePropertyDrawers(MaterialProperty prop)
@@ -183,7 +182,8 @@ public partial class ExtendedMaterialEditor : MaterialEditor
                     drawer = (ExtendedMaterialPropertyDrawer)CreateInstance(typeof(MaterialColorDrawer), string.Empty);
                     break;
                 case MaterialProperty.PropType.Vector:
-                    drawer = (ExtendedMaterialPropertyDrawer)CreateInstance(typeof(MaterialVectorDrawer), string.Empty);
+                    drawer = (ExtendedMaterialPropertyDrawer)CreateInstance(typeof(MaterialVectorDrawer),
+                        string.Empty);
                     break;
                 case MaterialProperty.PropType.Float:
                     drawer = (ExtendedMaterialPropertyDrawer)CreateInstance(typeof(MaterialFloatDrawer), string.Empty);
@@ -192,7 +192,8 @@ public partial class ExtendedMaterialEditor : MaterialEditor
                     drawer = (ExtendedMaterialPropertyDrawer)CreateInstance(typeof(MaterialRangeDrawer), string.Empty);
                     break;
                 case MaterialProperty.PropType.Texture:
-                    drawer = (ExtendedMaterialPropertyDrawer)CreateInstance(typeof(MaterialTextureDrawer), string.Empty);
+                    drawer = (ExtendedMaterialPropertyDrawer)CreateInstance(typeof(MaterialTextureDrawer),
+                        string.Empty);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -217,13 +218,11 @@ public partial class ExtendedMaterialEditor : MaterialEditor
         }
         var materialPropertyDrawers =
             AppDomain.CurrentDomain.GetAssemblies()
-                .Select(a => a.GetTypes().Where(t => t.IsSubclassOf(typeof(ExtendedMaterialPropertyAspect)))).SelectMany(c => c);
+                .Select(a => a.GetTypes().Where(t => t.IsSubclassOf(typeof(ExtendedMaterialPropertyAspect))))
+                .SelectMany(c => c);
         foreach (Type type in materialPropertyDrawers)
         {
-            if (type.Name == str || type.Name == str + "Drawer" || type.Name == "Material" + str + "Drawer" ||
-                type.Name == str + "Decorator" || type.Name == "Material" + str || type.Name == "Material" + str + "Decorator" ||
-                type.Name == str + "Gizmo" || type.Name == "Material" + str || type.Name == "Material" + str + "Gizmo" ||
-                type.Name == str + "Attribute" || type.Name == "Material" + str || type.Name == "Material" + str + "Attribute")
+            if (IsMatchingType(type, str))
             {
                 try
                 {
@@ -231,13 +230,23 @@ public partial class ExtendedMaterialEditor : MaterialEditor
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogErrorFormat("Failed to create type: {0} with arguments '{1}'. Expection Message: {2}", type, argsText, ex.Message);
+                    Debug.LogErrorFormat("Failed to create type: {0} with arguments '{1}'. Expection Message: {2}",
+                        type, argsText, ex.Message);
                     return null;
                 }
             }
         }
 
         return null;
+    }
+
+    private static bool IsMatchingType(Type type, string str)
+    {
+        return type.Name == str ||
+            type.Name == str + "Drawer" || type.Name == "Material" + str + "Drawer" ||
+            type.Name == str + "Decorator" || type.Name == "Material" + str + "Decorator" ||
+            type.Name == str + "Gizmo" || type.Name == "Material" + str + "Gizmo" ||
+            type.Name == str + "Attribute" || type.Name == "Material" + str + "Attribute";
     }
 
     private static object CreateInstance(Type type, string argsText)

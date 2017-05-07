@@ -3,38 +3,28 @@ using UnityEngine;
 
 internal class MaterialIntRangeDrawer : ExtendedMaterialPropertyDrawer
 {
-    public override float GetPropertyHeight()
+    private static readonly MaterialProperty.PropType[] validPropTypes = { MaterialProperty.PropType.Range };
+    protected override MaterialProperty.PropType[] ValidPropTypes
     {
-        return Prop.type != MaterialProperty.PropType.Range ? 40f : base.GetPropertyHeight();
+        get
+        {
+            return validPropTypes;
+        }
     }
 
-    public override void ExtendedOnGUI()
+
+    protected override void DrawProperty(Rect position)
     {
-        Rect position = EditorGUILayout.GetControlRect(true, GetPropertyHeight(),
-            EditorStyles.layerMaskField);
-        if (Prop.type != MaterialProperty.PropType.Range)
+        EditorGUI.BeginChangeCheck();
+        EditorGUI.showMixedValue = Prop.hasMixedValue;
+        float labelWidth = EditorGUIUtility.labelWidth;
+        EditorGUIUtility.labelWidth = 0.0f;
+        int num = EditorGUI.IntSlider(position, LabelString, (int)Prop.floatValue, (int)Prop.rangeLimits.x, (int)Prop.rangeLimits.y);
+        EditorGUI.showMixedValue = false;
+        EditorGUIUtility.labelWidth = labelWidth;
+        if (EditorGUI.EndChangeCheck())
         {
-            EditorGUI.HelpBox(position, "IntRange used on a non-range property: " + Prop.name, MessageType.Warning);
-            return;
+            Prop.floatValue = num;
         }
-        MaterialBackgroundColorAttribute backgroundColorAttribute = MaterialBackgroundColorAttributeHelper.GetBackgroundColorAttribute(ExtendedAttributes);
-        backgroundColorAttribute.BeginBackgroundColor();
-        using (
-            new EditorGUI.DisabledScope(
-                MaterialDependantPropertyHelper.IsDisabled(ExtendedAttributes, AllProperties)))
-        {
-            EditorGUI.BeginChangeCheck();
-            EditorGUI.showMixedValue = Prop.hasMixedValue;
-            float labelWidth = EditorGUIUtility.labelWidth;
-            EditorGUIUtility.labelWidth = 0.0f;
-            int num = EditorGUI.IntSlider(position, LabelString, (int)Prop.floatValue, (int)Prop.rangeLimits.x, (int)Prop.rangeLimits.y);
-            EditorGUI.showMixedValue = false;
-            EditorGUIUtility.labelWidth = labelWidth;
-            if (EditorGUI.EndChangeCheck())
-            {
-                Prop.floatValue = num;
-            }
-        }
-        backgroundColorAttribute.EndBackgroundColor();
     }
 }

@@ -111,21 +111,16 @@ internal class MaterialKeywordEnumDrawer : ExtendedMaterialPropertyDrawer
         }
     }
 
-    private static bool IsPropertyTypeSuitable(MaterialProperty prop)
-    {
-        return prop.type == MaterialProperty.PropType.Float || prop.type == MaterialProperty.PropType.Range;
-    }
-
     private void SetKeyword(MaterialProperty prop, int index)
     {
         for (int i = 0; i < keywords.Length; i++)
         {
             string keywordName = GetKeywordName(prop.name, keywords[i].text);
             Object[] targets = prop.targets;
-            for (int j = 0; j < targets.Length; j++)
+            foreach (Object target in targets)
             {
-                Material material = (Material)targets[j];
-                if (index == i)
+                var material = (Material)target;
+                if (i == index)
                 {
                     material.EnableKeyword(keywordName);
                 }
@@ -137,38 +132,34 @@ internal class MaterialKeywordEnumDrawer : ExtendedMaterialPropertyDrawer
         }
     }
 
-    public override float GetPropertyHeight()
+    private static readonly MaterialProperty.PropType[] validPropTypes = { MaterialProperty.PropType.Float, MaterialProperty.PropType.Range };
+    protected override MaterialProperty.PropType[] ValidPropTypes
     {
-        return IsPropertyTypeSuitable(Prop) ? base.GetPropertyHeight() : 40f;
-    }
-
-    public override void ExtendedOnGUI()
-    {
-        Rect position = EditorGUILayout.GetControlRect(true, GetPropertyHeight(),
-            EditorStyles.layerMaskField);
-        if (!IsPropertyTypeSuitable(Prop))
+        get
         {
-            EditorGUI.HelpBox(position, "MaterialKeywordEnumDrawer used on a non-float / non-range property: " + Prop.name, MessageType.Warning);
-        }
-        else
-        {
-            EditorGUI.BeginChangeCheck();
-            EditorGUI.showMixedValue = Prop.hasMixedValue;
-            int num = (int)Prop.floatValue;
-            num = EditorGUI.Popup(position, LabelContent, num, keywords);
-            EditorGUI.showMixedValue = false;
-            if (EditorGUI.EndChangeCheck())
-            {
-                Prop.floatValue = (float)num;
-                SetKeyword(Prop, num);
-            }
+            return validPropTypes;
         }
     }
 
-    public override void ExtendedApply(ExtendedMaterialEditor.MaterialPropertyInfo materialPropertyInfo)
+
+    protected override void DrawProperty(Rect position)
     {
-        base.ExtendedApply(materialPropertyInfo);
-        if (IsPropertyTypeSuitable(Prop))
+        EditorGUI.BeginChangeCheck();
+        EditorGUI.showMixedValue = Prop.hasMixedValue;
+        int num = (int)Prop.floatValue;
+        num = EditorGUI.Popup(position, LabelContent, num, keywords);
+        EditorGUI.showMixedValue = false;
+        if (EditorGUI.EndChangeCheck())
+        {
+            Prop.floatValue = num;
+            SetKeyword(Prop, num);
+        }
+    }
+
+    public override void Setup(ExtendedMaterialEditor.MaterialPropertyInfo materialPropertyInfo)
+    {
+        base.Setup(materialPropertyInfo);
+        if (IsPropertyTypeValid())
         {
             if (!Prop.hasMixedValue)
             {

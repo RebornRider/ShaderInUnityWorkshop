@@ -4,6 +4,8 @@ using UnityEngine;
 
 internal class MaterialToggleDrawer : ExtendedMaterialPropertyDrawer
 {
+    protected readonly string keyword;
+
     public MaterialToggleDrawer()
     {
     }
@@ -13,11 +15,6 @@ internal class MaterialToggleDrawer : ExtendedMaterialPropertyDrawer
         this.keyword = keyword;
     }
 
-    private static bool IsPropertyTypeSuitable(MaterialProperty prop)
-    {
-        return prop.type == MaterialProperty.PropType.Float || prop.type == MaterialProperty.PropType.Range;
-    }
-
     protected virtual void SetKeyword(MaterialProperty prop, bool on)
     {
         SetKeywordInternal(prop, on, "_ON");
@@ -25,7 +22,7 @@ internal class MaterialToggleDrawer : ExtendedMaterialPropertyDrawer
 
     protected void SetKeywordInternal(MaterialProperty prop, bool on, string defaultKeywordSuffix)
     {
-        string text = (!string.IsNullOrEmpty(keyword)) ? keyword : (prop.name.ToUpperInvariant() + defaultKeywordSuffix);
+        string text = !string.IsNullOrEmpty(keyword) ? keyword : prop.name.ToUpperInvariant() + defaultKeywordSuffix;
         UnityEngine.Object[] targets = prop.targets;
         for (int i = 0; i < targets.Length; i++)
         {
@@ -41,43 +38,34 @@ internal class MaterialToggleDrawer : ExtendedMaterialPropertyDrawer
         }
     }
 
-    public override float GetPropertyHeight()
+    private static readonly MaterialProperty.PropType[] validPropTypes = { MaterialProperty.PropType.Float, MaterialProperty.PropType.Range };
+    protected override MaterialProperty.PropType[] ValidPropTypes
     {
-        return IsPropertyTypeSuitable(Prop) ? base.GetPropertyHeight() : 40f;
+        get
+        {
+            return validPropTypes;
+        }
     }
 
-    public override void ExtendedOnGUI()
+
+    protected override void DrawProperty(Rect position)
     {
-        Rect position = EditorGUILayout.GetControlRect(true, GetPropertyHeight(),
-            EditorStyles.layerMaskField);
-        if (!IsPropertyTypeSuitable(Prop))
+        EditorGUI.BeginChangeCheck();
+        bool flag = Math.Abs(Prop.floatValue) > 0.001f;
+        EditorGUI.showMixedValue = Prop.hasMixedValue;
+        flag = EditorGUI.Toggle(position, LabelContent, flag);
+        EditorGUI.showMixedValue = false;
+        if (EditorGUI.EndChangeCheck())
         {
-            EditorGUI.HelpBox(position, "Toggle used on a non-float / non-range property: " + Prop.name, MessageType.Warning);
-            return;
+            Prop.floatValue = !flag ? 0f : 1f;
+            SetKeyword(Prop, flag);
         }
-        MaterialBackgroundColorAttribute backgroundColorAttribute = MaterialBackgroundColorAttributeHelper.GetBackgroundColorAttribute(ExtendedAttributes);
-        backgroundColorAttribute.BeginBackgroundColor();
-        using (
-            new EditorGUI.DisabledScope(
-                MaterialDependantPropertyHelper.IsDisabled(ExtendedAttributes, AllProperties)))
-        {
-            EditorGUI.BeginChangeCheck();
-            bool flag = Math.Abs(Prop.floatValue) > 0.001f;
-            EditorGUI.showMixedValue = Prop.hasMixedValue;
-            flag = EditorGUI.Toggle(position, LabelContent, flag);
-            EditorGUI.showMixedValue = false;
-            if (EditorGUI.EndChangeCheck())
-            {
-                Prop.floatValue = ((!flag) ? 0f : 1f);
-                SetKeyword(Prop, flag);
-            }
-        }
-        backgroundColorAttribute.EndBackgroundColor();
     }
-    public override void ExtendedApply(ExtendedMaterialEditor.MaterialPropertyInfo materialPropertyInfo)
+
+    public override void Setup(ExtendedMaterialEditor.MaterialPropertyInfo materialPropertyInfo)
     {
-        base.ExtendedApply(materialPropertyInfo);
-        if (IsPropertyTypeSuitable(Prop))
+        base.Setup(materialPropertyInfo);
+        if (IsPropertyTypeValid())
         {
             if (!Prop.hasMixedValue)
             {
@@ -85,6 +73,4 @@ internal class MaterialToggleDrawer : ExtendedMaterialPropertyDrawer
             }
         }
     }
-
-    protected readonly string keyword;
 }

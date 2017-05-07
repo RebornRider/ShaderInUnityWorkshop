@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class MaterialBackgroundColorAttribute : ExtendedMaterialPropertyAttribute
@@ -5,6 +6,7 @@ public class MaterialBackgroundColorAttribute : ExtendedMaterialPropertyAttribut
     private readonly Color color = Color.magenta;
     private Color originalBackgroundColor;
     private static readonly NullObjectImpl nullObject = new NullObjectImpl();
+
     public static MaterialBackgroundColorAttribute NullObject
     {
         get { return nullObject; }
@@ -28,27 +30,46 @@ public class MaterialBackgroundColorAttribute : ExtendedMaterialPropertyAttribut
         }
     }
 
-    public virtual void BeginBackgroundColor()
+    protected virtual void BeginBackgroundColor()
     {
         originalBackgroundColor = GUI.backgroundColor;
         GUI.backgroundColor = color;
     }
 
-    public virtual void EndBackgroundColor()
+    protected virtual void EndBackgroundColor()
     {
         GUI.backgroundColor = originalBackgroundColor;
     }
 
-    private sealed class NullObjectImpl : MaterialBackgroundColorAttribute
+    public BackgroundColorScope MakeBackgroundColorScope()
     {
-        public override void BeginBackgroundColor()
-        {
+        return new BackgroundColorScope(this);
+    }
 
+    public struct BackgroundColorScope : IDisposable
+    {
+        private readonly MaterialBackgroundColorAttribute backgroundColorAttribute;
+
+        public BackgroundColorScope(MaterialBackgroundColorAttribute backgroundColorAttribute)
+        {
+            this.backgroundColorAttribute = backgroundColorAttribute;
+            backgroundColorAttribute.BeginBackgroundColor();
         }
 
-        public override void EndBackgroundColor()
+        public void Dispose()
         {
+            backgroundColorAttribute.EndBackgroundColor();
+        }
+    }
 
+    private sealed class NullObjectImpl : MaterialBackgroundColorAttribute
+    {
+        protected override void BeginBackgroundColor()
+        {
+        }
+
+        protected override void EndBackgroundColor()
+        {
         }
     }
 }

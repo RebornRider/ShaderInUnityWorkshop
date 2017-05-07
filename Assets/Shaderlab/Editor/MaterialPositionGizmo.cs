@@ -75,9 +75,9 @@ public class MaterialPositionGizmo : ExtendedMaterialPropertyGizmo
         Handles.matrix = matrix;
     }
 
-    public override void ExtendedApply(ExtendedMaterialEditor.MaterialPropertyInfo materialPropertyInfo)
+    public override void Setup(ExtendedMaterialEditor.MaterialPropertyInfo materialPropertyInfo)
     {
-        base.ExtendedApply(materialPropertyInfo);
+        base.Setup(materialPropertyInfo);
 
         if (ExtendedDrawer is MaterialVector3Drawer == false)
         {

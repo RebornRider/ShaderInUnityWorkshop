@@ -163,38 +163,26 @@ internal class MaterialEnumDrawer : ExtendedMaterialPropertyDrawer
             values[j] = (int)vals[j];
     }
 
-    public override float GetPropertyHeight()
+    private static readonly MaterialProperty.PropType[] validPropTypes = { MaterialProperty.PropType.Float, MaterialProperty.PropType.Range };
+    protected override MaterialProperty.PropType[] ValidPropTypes
     {
-        return Prop.type != MaterialProperty.PropType.Float && Prop.type != MaterialProperty.PropType.Range
-            ? 40f
-            : base.GetPropertyHeight();
+        get
+        {
+            return validPropTypes;
+        }
     }
 
-    public override void ExtendedOnGUI()
+
+    protected override void DrawProperty(Rect position)
     {
-        Rect position = EditorGUILayout.GetControlRect(true, GetPropertyHeight(),
-            EditorStyles.layerMaskField);
-        if (Prop.type != MaterialProperty.PropType.Float && Prop.type != MaterialProperty.PropType.Range)
+        EditorGUI.BeginChangeCheck();
+        EditorGUI.showMixedValue = Prop.hasMixedValue;
+        var num = (int)Prop.floatValue;
+        num = EditorGUI.IntPopup(position, LabelContent, num, names, values);
+        EditorGUI.showMixedValue = false;
+        if (EditorGUI.EndChangeCheck())
         {
-            EditorGUI.HelpBox(position, "MaterialEnumDrawer used on a non-float / non-range property: " + Prop.name, MessageType.Warning);
-            return;
+            Prop.floatValue = num;
         }
-        MaterialBackgroundColorAttribute backgroundColorAttribute = MaterialBackgroundColorAttributeHelper.GetBackgroundColorAttribute(ExtendedAttributes);
-        backgroundColorAttribute.BeginBackgroundColor();
-        using (
-            new EditorGUI.DisabledScope(
-                MaterialDependantPropertyHelper.IsDisabled(ExtendedAttributes, AllProperties)))
-        {
-            EditorGUI.BeginChangeCheck();
-            EditorGUI.showMixedValue = Prop.hasMixedValue;
-            var num = (int)Prop.floatValue;
-            num = EditorGUI.IntPopup(position, LabelContent, num, names, values);
-            EditorGUI.showMixedValue = false;
-            if (EditorGUI.EndChangeCheck())
-            {
-                Prop.floatValue = num;
-            }
-        }
-        backgroundColorAttribute.EndBackgroundColor();
     }
 }

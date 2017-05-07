@@ -20,51 +20,44 @@ public class MaterialPackedDrawer : ExtendedMaterialPropertyDrawer
         wLabel = new GUIContent(w);
     }
 
-    public override float GetPropertyHeight()
+    protected override float GetPropertyHeight()
     {
-        return Prop.type != MaterialProperty.PropType.Vector ? 40f : base.GetPropertyHeight() * 5;
+        return IsPropertyTypeValid() ? DefaultPropterHeight * 5 : TypeWarningPropertyHeight;
     }
 
-    public override void ExtendedOnGUI()
+    private static readonly MaterialProperty.PropType[] validPropTypes = { MaterialProperty.PropType.Vector };
+    protected override MaterialProperty.PropType[] ValidPropTypes
     {
-
-        Rect position = EditorGUILayout.GetControlRect(true, GetPropertyHeight(),
-            EditorStyles.layerMaskField);
-        if (Prop.type != MaterialProperty.PropType.Vector)
+        get
         {
-            EditorGUI.HelpBox(position, "MaterialVector3Drawer used on a non-vector property: " + Prop.name, MessageType.Warning);
-            return;
+            return validPropTypes;
         }
-        MaterialBackgroundColorAttribute backgroundColorAttribute = MaterialBackgroundColorAttributeHelper.GetBackgroundColorAttribute(ExtendedAttributes);
-        backgroundColorAttribute.BeginBackgroundColor();
-        using (
-            new EditorGUI.DisabledScope(
-                MaterialDependantPropertyHelper.IsDisabled(ExtendedAttributes, AllProperties)))
-        {
-            EditorGUI.BeginChangeCheck();
-            EditorGUI.showMixedValue = Prop.hasMixedValue;
-            float lineHeight = base.GetPropertyHeight();
-            position.height = lineHeight;
-            EditorGUI.LabelField(position, LabelString);
-            position.y += lineHeight;
-            EditorGUI.indentLevel++;
-            BeginDefaultGUIWidth();
-            float x = EditorGUI.FloatField(position, xLabel, Prop.vectorValue.x);
-            position.y += lineHeight;
-            float y = EditorGUI.FloatField(position, yLabel, Prop.vectorValue.y);
-            position.y += lineHeight;
-            float z = EditorGUI.FloatField(position, zLabel, Prop.vectorValue.z);
-            position.y += lineHeight;
-            float w = EditorGUI.FloatField(position, wLabel, Prop.vectorValue.w);
-            EndDefaultGUIWidth();
-            EditorGUI.indentLevel--;
-            EditorGUI.showMixedValue = false;
-            if (EditorGUI.EndChangeCheck())
-            {
-                Prop.vectorValue = new Vector4(x, y, z, w);
-            }
-        }
-        backgroundColorAttribute.EndBackgroundColor();
+    }
 
+
+    protected override void DrawProperty(Rect position)
+    {
+        EditorGUI.BeginChangeCheck();
+        EditorGUI.showMixedValue = Prop.hasMixedValue;
+        float lineHeight = DefaultPropterHeight;
+        position.height = lineHeight;
+        EditorGUI.LabelField(position, LabelString);
+        position.y += lineHeight;
+        EditorGUI.indentLevel++;
+        BeginDefaultGUIWidth();
+        float x = EditorGUI.FloatField(position, xLabel, Prop.vectorValue.x);
+        position.y += lineHeight;
+        float y = EditorGUI.FloatField(position, yLabel, Prop.vectorValue.y);
+        position.y += lineHeight;
+        float z = EditorGUI.FloatField(position, zLabel, Prop.vectorValue.z);
+        position.y += lineHeight;
+        float w = EditorGUI.FloatField(position, wLabel, Prop.vectorValue.w);
+        EndDefaultGUIWidth();
+        EditorGUI.indentLevel--;
+        EditorGUI.showMixedValue = false;
+        if (EditorGUI.EndChangeCheck())
+        {
+            Prop.vectorValue = new Vector4(x, y, z, w);
+        }
     }
 }

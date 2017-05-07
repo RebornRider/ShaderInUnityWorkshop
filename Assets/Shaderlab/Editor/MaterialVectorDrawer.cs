@@ -3,39 +3,33 @@ using UnityEngine;
 
 internal class MaterialVectorDrawer : ExtendedMaterialPropertyDrawer
 {
-    public override float GetPropertyHeight()
+    protected override float GetPropertyHeight()
     {
-        return Prop.type != MaterialProperty.PropType.Vector ? 40f : 32;
+        return IsPropertyTypeValid() ? 32f : TypeWarningPropertyHeight;
     }
 
-    public override void ExtendedOnGUI()
+    private static readonly MaterialProperty.PropType[] validPropTypes = { MaterialProperty.PropType.Vector };
+    protected override MaterialProperty.PropType[] ValidPropTypes
     {
-        Rect position = EditorGUILayout.GetControlRect(true, GetPropertyHeight(),
-            EditorStyles.layerMaskField);
-        if (Prop.type != MaterialProperty.PropType.Vector)
+        get
         {
-            EditorGUI.HelpBox(position, "MaterialVectorDrawer used on a non-vector property: " + Prop.name, MessageType.Warning);
-            return;
+            return validPropTypes;
         }
-        MaterialBackgroundColorAttribute backgroundColorAttribute = MaterialBackgroundColorAttributeHelper.GetBackgroundColorAttribute(ExtendedAttributes);
-        backgroundColorAttribute.BeginBackgroundColor();
-        using (
-            new EditorGUI.DisabledScope(
-                MaterialDependantPropertyHelper.IsDisabled(ExtendedAttributes, AllProperties)))
-        {
-            EditorGUI.BeginChangeCheck();
-            EditorGUI.showMixedValue = Prop.hasMixedValue;
-            float labelWidth = EditorGUIUtility.labelWidth;
-            EditorGUIUtility.labelWidth = 0.0f;
-            Vector4 vector4 = EditorGUI.Vector4Field(position, LabelContent, Prop.vectorValue);
-            EditorGUIUtility.labelWidth = labelWidth;
-            EditorGUI.showMixedValue = false;
-            if (EditorGUI.EndChangeCheck())
-            {
-                Prop.vectorValue = vector4;
-            }
-        }
-        backgroundColorAttribute.EndBackgroundColor();
     }
 
+
+    protected override void DrawProperty(Rect position)
+    {
+        EditorGUI.BeginChangeCheck();
+        EditorGUI.showMixedValue = Prop.hasMixedValue;
+        float labelWidth = EditorGUIUtility.labelWidth;
+        EditorGUIUtility.labelWidth = 0.0f;
+        Vector4 vector4 = EditorGUI.Vector4Field(position, LabelContent, Prop.vectorValue);
+        EditorGUIUtility.labelWidth = labelWidth;
+        EditorGUI.showMixedValue = false;
+        if (EditorGUI.EndChangeCheck())
+        {
+            Prop.vectorValue = vector4;
+        }
+    }
 }

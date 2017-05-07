@@ -12,38 +12,33 @@ public class MaterialVector2Drawer : ExtendedMaterialPropertyDrawer
         this.w = w;
     }
 
-    public override float GetPropertyHeight()
+    protected override float GetPropertyHeight()
     {
-        return Prop.type != MaterialProperty.PropType.Vector ? 40f : 32f;
+        return IsPropertyTypeValid() ? 32f : TypeWarningPropertyHeight;
     }
 
-    public override void ExtendedOnGUI()
+    private static readonly MaterialProperty.PropType[] validPropTypes = { MaterialProperty.PropType.Vector };
+    protected override MaterialProperty.PropType[] ValidPropTypes
     {
-        Rect position = EditorGUILayout.GetControlRect(true, GetPropertyHeight(),
-            EditorStyles.layerMaskField);
-        if (Prop.type != MaterialProperty.PropType.Vector)
+        get
         {
-            EditorGUI.HelpBox(position, "IntRange used on a non-vector property: " + Prop.name, MessageType.Warning);
-            return;
+            return validPropTypes;
         }
-        MaterialBackgroundColorAttribute backgroundColorAttribute = MaterialBackgroundColorAttributeHelper.GetBackgroundColorAttribute(ExtendedAttributes);
-        backgroundColorAttribute.BeginBackgroundColor();
-        using (
-            new EditorGUI.DisabledScope(
-                MaterialDependantPropertyHelper.IsDisabled(ExtendedAttributes, AllProperties)))
+    }
+
+
+    protected override void DrawProperty(Rect position)
+    {
+        EditorGUI.BeginChangeCheck();
+        EditorGUI.showMixedValue = Prop.hasMixedValue;
+        float labelWidth = EditorGUIUtility.labelWidth;
+        EditorGUIUtility.labelWidth = 0.0f;
+        Vector2 vector2 = EditorGUI.Vector2Field(position, LabelString, Prop.vectorValue);
+        EditorGUIUtility.labelWidth = labelWidth;
+        EditorGUI.showMixedValue = false;
+        if (EditorGUI.EndChangeCheck())
         {
-            EditorGUI.BeginChangeCheck();
-            EditorGUI.showMixedValue = Prop.hasMixedValue;
-            float labelWidth = EditorGUIUtility.labelWidth;
-            EditorGUIUtility.labelWidth = 0.0f;
-            Vector2 vector2 = EditorGUI.Vector2Field(position, LabelString, Prop.vectorValue);
-            EditorGUIUtility.labelWidth = labelWidth;
-            EditorGUI.showMixedValue = false;
-            if (EditorGUI.EndChangeCheck())
-            {
-                Prop.vectorValue = new Vector4(vector2.x, vector2.y, z, w);
-            }
+            Prop.vectorValue = new Vector4(vector2.x, vector2.y, z, w);
         }
-        backgroundColorAttribute.EndBackgroundColor();
     }
 }

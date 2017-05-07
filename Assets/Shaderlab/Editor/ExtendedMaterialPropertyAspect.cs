@@ -45,7 +45,7 @@ public abstract class ExtendedMaterialPropertyAspect
         get { return new GUIContent(Prop.displayName); }
     }
 
-    public virtual void ExtendedApply(ExtendedMaterialEditor.MaterialPropertyInfo materialPropertyInfo)
+    public virtual void Setup(ExtendedMaterialEditor.MaterialPropertyInfo materialPropertyInfo)
     {
         this.materialPropertyInfo = materialPropertyInfo;
     }

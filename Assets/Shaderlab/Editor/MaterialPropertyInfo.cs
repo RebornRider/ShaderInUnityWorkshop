@@ -13,16 +13,6 @@ public partial class ExtendedMaterialEditor
         public MaterialEditor Editor { get; private set; }
         public IEnumerable<MaterialProperty> AllProperties { get; private set; }
 
-        public bool HasExtendedAttributes
-        {
-            get { return ExtendedAttributes.Count > 0; }
-        }
-
-        public bool HasExtendedGizmos
-        {
-            get { return ExtendedGizmos.Count > 0; }
-        }
-
         public bool IsHiddenInInspector
         {
             get
@@ -39,23 +29,23 @@ public partial class ExtendedMaterialEditor
 
         }
 
-        public void ExtendedApply(IEnumerable<MaterialProperty> allProperties, MaterialEditor editor)
+        public void Setup(IEnumerable<MaterialProperty> allProperties, MaterialEditor editor)
         {
             AllProperties = allProperties.EmptyIfNull();
             Editor = editor;
 
-            ExtendedMaterialDrawer.ExtendedApply(this);
+            ExtendedMaterialDrawer.Setup(this);
             foreach (var extendedDecorator in ExtendedDecorators)
             {
-                extendedDecorator.ExtendedApply(this);
+                extendedDecorator.Setup(this);
             }
             foreach (var extendedPropertyAttribute in ExtendedAttributes)
             {
-                extendedPropertyAttribute.ExtendedApply(this);
+                extendedPropertyAttribute.Setup(this);
             }
             foreach (var extendedPropertyGizmo in ExtendedGizmos)
             {
-                extendedPropertyGizmo.ExtendedApply(this);
+                extendedPropertyGizmo.Setup(this);
             }
         }
 

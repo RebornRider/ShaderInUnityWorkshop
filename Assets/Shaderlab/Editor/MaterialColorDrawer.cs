@@ -3,39 +3,27 @@ using UnityEngine;
 
 internal class MaterialColorDrawer : ExtendedMaterialPropertyDrawer
 {
-    public override float GetPropertyHeight()
+    private static readonly MaterialProperty.PropType[] validPropTypes = { MaterialProperty.PropType.Color };
+    protected override MaterialProperty.PropType[] ValidPropTypes
     {
-        return Prop.type != MaterialProperty.PropType.Color ? 40f : base.GetPropertyHeight();
+        get
+        {
+            return validPropTypes;
+        }
     }
 
-    public override void ExtendedOnGUI()
+    protected override void DrawProperty(Rect position)
     {
-        Rect position = EditorGUILayout.GetControlRect(true, GetPropertyHeight(),
-            EditorStyles.layerMaskField);
-        if (Prop.type != MaterialProperty.PropType.Color)
+        EditorGUI.BeginChangeCheck();
+        EditorGUI.showMixedValue = Prop.hasMixedValue;
+        BeginDefaultGUIWidth();
+        bool hdr = (Prop.flags & MaterialProperty.PropFlags.HDR) != MaterialProperty.PropFlags.None;
+        Color color = EditorGUI.ColorField(position, LabelContent, Prop.colorValue, true, true, hdr, null);
+        EditorGUI.showMixedValue = false;
+        if (EditorGUI.EndChangeCheck())
         {
-            EditorGUI.HelpBox(position, "MaterialColorDrawer used on a non-color property: " + Prop.name, MessageType.Warning);
-            return;
+            Prop.colorValue = color;
         }
-        MaterialBackgroundColorAttribute backgroundColorAttribute = MaterialBackgroundColorAttributeHelper.GetBackgroundColorAttribute(ExtendedAttributes);
-        backgroundColorAttribute.BeginBackgroundColor();
-        using (
-            new EditorGUI.DisabledScope(
-                MaterialDependantPropertyHelper.IsDisabled(ExtendedAttributes, AllProperties)))
-        {
-            EditorGUI.BeginChangeCheck();
-            EditorGUI.showMixedValue = Prop.hasMixedValue;
-            BeginDefaultGUIWidth();
-            bool hdr = (Prop.flags & MaterialProperty.PropFlags.HDR) != MaterialProperty.PropFlags.None;
-            Color color = EditorGUI.ColorField(position, LabelContent, Prop.colorValue, true, true, hdr, null);
-            EditorGUI.showMixedValue = false;
-            if (EditorGUI.EndChangeCheck())
-            {
-                Prop.colorValue = color;
-            }
-            EndDefaultGUIWidth();
-        }
-        backgroundColorAttribute.EndBackgroundColor();
+        EndDefaultGUIWidth();
     }
-
 }
