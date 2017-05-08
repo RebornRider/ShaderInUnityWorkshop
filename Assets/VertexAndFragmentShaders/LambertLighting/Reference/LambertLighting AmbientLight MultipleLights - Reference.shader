@@ -57,7 +57,6 @@
 			{
 				float3 worldNormal = normalize(i.normal);
 				half NdotL = saturate(dot(worldNormal, UnityWorldSpaceLightDir(i.modelPos)));
-				// factor in the light color and ambience
 				fixed3 lightCol = saturate((NdotL * _LightColor0)  + ShadeSH9(half4(worldNormal,1)));
 				fixed3 diffuseColor = tex2D(_MainTex, TRANSFORM_TEX(i.uv, _MainTex));
 				return diffuseColor * lightCol;
